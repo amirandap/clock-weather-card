@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.9.3] (2026-04-03)
+
+
+### Bug Fixes
+
+* **theme**: Weather condition themes now render correctly inside Home Assistant. Three root-cause fixes applied:
+  * Added `:host { display: block }` so `hass-weather-card` is a block element and renders at the correct size
+  * Changed `ha-card { height: 100% }` to `height: auto` so the card auto-sizes to its content in standalone/demo mode
+  * Added `--ha-card-background: var(--widget-gradient)` to all theme rules so Home Assistant's `ha-card` shadow DOM picks up the correct gradient (previously the HA dark theme background would cover our gradient, showing a black card instead of the intended colours)
+
 ## [2.9.2](https://github.com/pkissling/clock-weather-card/compare/v2.9.1...v2.9.2) (2025-12-23)
 
 

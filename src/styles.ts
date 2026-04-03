@@ -2,6 +2,11 @@ import { css } from 'lit'
 
 export default css`
 
+  /* ── Host: make the custom element a block so layout works ── */
+  :host {
+    display: block;
+  }
+
   /* ── Base text-color vars (white on any gradient) */
   ha-card {
     --color-text-primary:   rgba(255, 255, 255, 1);
@@ -10,15 +15,23 @@ export default css`
     --shadow-tint:     rgba(42, 96, 192, 0.45);
     --icon-filter:     brightness(0) invert(1) drop-shadow(0 4px 12px rgba(0,0,0,0.3));
 
+    /*
+     * --ha-card-background drives ha-card's inner shadow-DOM div when running
+     * inside Home Assistant (where ha-card is a registered custom element).
+     * 'background' acts as the fallback for standalone demo mode where ha-card
+     * is just an unknown HTML element with no shadow DOM of its own.
+     */
+    --ha-card-background:  var(--widget-gradient);
+    --ha-card-box-shadow:  0 24px 60px var(--shadow-tint), 0 8px 24px rgba(0, 0, 0, 0.25);
+
     position: relative;
     overflow: visible;
-    height: 100%;
+    /* height: auto so content expands the card; 100% is set by HA's grid when needed */
+    height: auto;
     background: var(--widget-gradient);
     border-radius: var(--ha-card-border-radius, 12px);
     transition: background 1.4s ease, box-shadow 1.4s ease;
-    box-shadow:
-      0 24px 60px var(--shadow-tint),
-      0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--ha-card-box-shadow);
     padding: 0 !important;
   }
 
