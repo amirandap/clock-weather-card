@@ -15,7 +15,6 @@ import {
   type ClockWeatherCardConfig,
   type MergedClockWeatherCardConfig,
   type MergedWeatherForecast,
-  Rgb,
   type TemperatureSensor,
   type TemperatureUnit,
   type HumiditySensor,
@@ -73,15 +72,6 @@ const CONDITION_GROUP: Record<string, string> = {
 const LOTTIE_CLOUDS_GROUPS = new Set(['sunny', 'partly-cloudy', 'cloudy', 'foggy', 'snowy'])
 const LOTTIE_RAIN_GROUPS   = new Set(['rainy', 'pouring', 'stormy'])
 
-const gradientMap: Map<number, Rgb> = new Map()
-  .set(-20, new Rgb(0, 60, 98))
-  .set(-10, new Rgb(120, 162, 204))
-  .set(0, new Rgb(164, 195, 210))
-  .set(10, new Rgb(121, 210, 179))
-  .set(20, new Rgb(252, 245, 112))
-  .set(30, new Rgb(255, 150, 79))
-  .set(40, new Rgb(255, 192, 159))
-
 @customElement('hass-weather-card')
 export class HassWeatherCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant
@@ -89,8 +79,10 @@ export class HassWeatherCard extends LitElement {
   @state() private config!: MergedClockWeatherCardConfig
   @state() private currentDate!: DateTime
   @state() private forecasts?: WeatherForecast[]
+  @state() private hourlyForecasts?: WeatherForecast[]
   @state() private error?: TemplateResult
   private forecastSubscriber?: () => Promise<void>
+  private forecastSubscriberHourly?: () => Promise<void>
   private forecastSubscriberLock = false
   private _lottieCloud?: DotLottie
   private _lottieRain?: DotLottie
@@ -135,7 +127,7 @@ export class HassWeatherCard extends LitElement {
     if (!this.config) {
       return false
     }
-    if (changedProps.has('forecasts')) {
+    if (changedProps.has('forecasts') || changedProps.has('hourlyForecasts')) {
       return true
     }
     const oldHass = changedProps.get('hass') as HomeAssistant | undefined
@@ -184,7 +176,7 @@ export class HassWeatherCard extends LitElement {
       src:      CLOUDS_LOTTIE,
       loop:     true,
       autoplay: true,
-      renderConfig: { devicePixelRatio: window.devicePixelRatio || 2 }
+      renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
 
     this._lottieRain = new DotLottie({
@@ -192,7 +184,7 @@ export class HassWeatherCard extends LitElement {
       src:      RAIN_LOTTIE,
       loop:     true,
       autoplay: true,
-      renderConfig: { devicePixelRatio: window.devicePixelRatio || 2 }
+      renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
   }
 
@@ -266,9 +258,12 @@ export class HassWeatherCard extends LitElement {
         <!-- All text content, z-index 2 -->
         <div class="card-body">
           ${safeRender(() => this.renderHero())}
-          ${showForecast
-            ? html`<div class="forecast-section">${this.renderForecast()}</div>`
-            : ''}
+          ${showForecast ? html`
+            <div class="forecast-section">
+              ${this.hourlyForecasts?.length ? safeRender(() => this.renderHourlyStrip()) : ''}
+              ${safeRender(() => this.renderDailyStrip())}
+            </div>
+          ` : ''}
         </div>
       </ha-card>
     `
@@ -290,7 +285,7 @@ export class HassWeatherCard extends LitElement {
 
   protected willUpdate (changedProps: PropertyValues): void {
     super.willUpdate(changedProps)
-    if (!this.forecastSubscriber) {
+    if (!this.forecastSubscriber && !this.forecastSubscriberHourly) {
       void this.subscribeForecastEvents()
     }
   }
@@ -323,96 +318,44 @@ export class HassWeatherCard extends LitElement {
     `
   }
 
-  // ── Forecast rows (unchanged logic, restyled) ────────────────────────────
+  // ── V1-style forecast strips ─────────────────────────────────────────────
 
-  private renderForecast (): TemplateResult[] {
-    const weather = this.getWeather()
-    const currentTemp = roundIfNotNull(this.getCurrentTemperature())
-    const maxRowsCount = this.config.forecast_rows
-    const hourly = this.config.hourly_forecast
-    const temperatureUnit = weather.attributes.temperature_unit
-
-    const forecasts = this.mergeForecasts(maxRowsCount, hourly)
-
-    const minTemps = forecasts.map((f) => f.templow)
-    const maxTemps = forecasts.map((f) => f.temperature)
-    if (currentTemp !== null) {
-      minTemps.push(currentTemp)
-      maxTemps.push(currentTemp)
-    }
-    const minTemp = Math.round(min(minTemps))
-    const maxTemp = Math.round(max(maxTemps))
-
-    const displayTexts = forecasts
-      .map(f => f.datetime)
-      .map(d => hourly ? this.time(d) : this.localize(`day.${d.weekday}`))
-    const maxColOneChars = displayTexts.length ? max(displayTexts.map(t => t.length)) : 0
-
-    return forecasts.map((forecast, i) => safeRender(() =>
-      this.renderForecastItem(forecast, minTemp, maxTemp, currentTemp, temperatureUnit, hourly, displayTexts[i], maxColOneChars)
-    ))
-  }
-
-  private renderForecastItem (
-    forecast: MergedWeatherForecast, minTemp: number, maxTemp: number,
-    currentTemp: number | null, temperatureUnit: TemperatureUnit,
-    hourly: boolean, displayText: string, maxColOneChars: number
-  ): TemplateResult {
-    const weatherState = forecast.condition === 'pouring' ? 'raindrops'
-      : forecast.condition === 'rainy' ? 'raindrop' : forecast.condition
-    const weatherIcon = this.toIcon(weatherState, 'line', true, 'static')
-    const tempUnit = this.getWeather().attributes.temperature_unit
-    const isNow = hourly ? DateTime.now().hour === forecast.datetime.hour : DateTime.now().day === forecast.datetime.day
-    const minTempDay = Math.round(isNow && currentTemp !== null ? Math.min(currentTemp, forecast.templow) : forecast.templow)
-    const maxTempDay = Math.round(isNow && currentTemp !== null ? Math.max(currentTemp, forecast.temperature) : forecast.temperature)
-
+  private renderHourlyStrip (): TemplateResult {
+    const items = this.mergeForecasts(4, true, this.hourlyForecasts ?? [])
     return html`
-      <clock-weather-card-forecast-row style="--col-one-size: ${(maxColOneChars * 0.5)}rem;">
-        ${this.renderText(displayText)}
-        ${this.renderIcon(weatherIcon)}
-        ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, minTempDay), 'right')}
-        ${this.renderForecastTemperatureBar(minTemp, maxTemp, minTempDay, maxTempDay, isNow, currentTemp, temperatureUnit)}
-        ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, maxTempDay))}
-      </clock-weather-card-forecast-row>
+      <div class="forecast-hourly">
+        ${items.map(f => safeRender(() => {
+          const icon = this.toIcon(f.condition, 'line', false, this.getIconAnimationKind())
+          return html`
+            <div class="hour-slot">
+              <img class="hour-slot__icon" src=${icon} alt="" />
+              <span class="hour-slot__time">${this.time(f.datetime)}</span>
+            </div>
+          `
+        }))}
+      </div>
     `
   }
 
-  private renderText (text: string, textAlign: 'left' | 'center' | 'right' = 'left'): TemplateResult {
-    return html`<forecast-text style="--text-align: ${textAlign};">${text}</forecast-text>`
-  }
-
-  private renderIcon (src: string): TemplateResult {
-    return html`<forecast-icon><img class="grow-img" src=${src} /></forecast-icon>`
-  }
-
-  private renderForecastTemperatureBar (
-    minTemp: number, maxTemp: number, minTempDay: number, maxTempDay: number,
-    isNow: boolean, currentTemp: number | null, temperatureUnit: TemperatureUnit
-  ): TemplateResult {
-    const { startPercent, endPercent } = this.calculateBarRangePercents(minTemp, maxTemp, minTempDay, maxTempDay)
-    const moveRight = maxTemp === minTemp ? 0 : (minTempDay - minTemp) / (maxTemp - minTemp)
+  private renderDailyStrip (): TemplateResult {
+    const rows = this.config.forecast_rows ?? 4
+    const items = this.mergeForecasts(rows, false)
+    const entityTempUnit = this.getWeather().attributes.temperature_unit
     return html`
-      <forecast-temperature-bar>
-        <forecast-temperature-bar-background></forecast-temperature-bar-background>
-        <forecast-temperature-bar-range
-          style="--move-right: ${moveRight.toFixed(2)}; --start-percent: ${startPercent.toFixed(2)}%; --end-percent: ${endPercent.toFixed(2)}%; --gradient: ${this.createGradientString(minTempDay, maxTempDay, temperatureUnit)};"
-        >
-          ${isNow ? this.renderForecastCurrentTemp(minTempDay, maxTempDay, currentTemp) : ''}
-        </forecast-temperature-bar-range>
-      </forecast-temperature-bar>
-    `
-  }
-
-  private renderForecastCurrentTemp (minTempDay: number, maxTempDay: number, currentTemp: number | null): TemplateResult {
-    if (currentTemp == null) return html``
-    const indicatorPosition = minTempDay === maxTempDay ? 0 : (100 / (maxTempDay - minTempDay)) * (currentTemp - minTempDay)
-    const steps = maxTempDay - minTempDay
-    const moveRight = maxTempDay === minTempDay ? 0 : (currentTemp - minTempDay) / steps
-    return html`
-      <forecast-temperature-bar-current-indicator style="--position: ${indicatorPosition}%;">
-        <forecast-temperature-bar-current-indicator-dot style="--move-right: ${moveRight}">
-        </forecast-temperature-bar-current-indicator-dot>
-      </forecast-temperature-bar-current-indicator>
+      <div class="forecast-daily" style="--daily-cols: ${items.length}">
+        ${items.map(f => safeRender(() => {
+          const icon = this.toIcon(f.condition, 'line', true, 'static')
+          const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
+          const day  = this.localize(`day.${f.datetime.weekday}`)
+          return html`
+            <div class="forecast-slot">
+              <img class="forecast-slot__icon" src=${icon} alt="" />
+              <span class="forecast-slot__temp">${temp}</span>
+              <span class="forecast-slot__day">${day}</span>
+            </div>
+          `
+        }))}
+      </div>
     `
   }
 
@@ -421,59 +364,7 @@ export class HassWeatherCard extends LitElement {
     return styles
   }
 
-  // ── Private helpers (preserved from upstream) ───────────────────────────
-
-  private createGradientString (minTempDay: number, maxTempDay: number, temperatureUnit: TemperatureUnit): string {
-    function linearizeColor (temp: number, [tempLeft, colorLeft]: [number, Rgb], [tempRight, colorRight]: [number, Rgb]): Rgb {
-      const ratio = Math.max(Math.min((temp - tempLeft) / (tempRight - tempLeft), 100.0), 0.0)
-      return new Rgb(
-        Math.round(colorLeft.r + ratio * (colorRight.r - colorLeft.r)),
-        Math.round(colorLeft.g + ratio * (colorRight.g - colorLeft.g)),
-        Math.round(colorLeft.b + ratio * (colorRight.b - colorLeft.b))
-      )
-    }
-
-    const minTempDayCelsius = this.toCelsius(temperatureUnit, minTempDay)
-    const maxTempDayCelsius = this.toCelsius(temperatureUnit, maxTempDay)
-
-    const outputGradient = ([...gradientMap.entries()]
-      .reduce((gradient, [temp, color], index, arr) => {
-        if (index === 0) {
-          if (temp > minTempDayCelsius) {
-            gradient.set(0.0, color)
-            gradient.set((temp - minTempDayCelsius) / (maxTempDayCelsius - minTempDayCelsius), color)
-          }
-        } else if (temp < minTempDayCelsius) {
-          // skip
-        } else if (!gradient.has(0.0)) {
-          gradient.set(0.0, linearizeColor(minTempDayCelsius, arr[index - 1], [temp, color]))
-          if (temp > maxTempDayCelsius) {
-            gradient.set(1.0, linearizeColor(maxTempDayCelsius, arr[index - 1], [temp, color]))
-          } else {
-            gradient.set((temp - minTempDayCelsius) / (maxTempDayCelsius - minTempDayCelsius), color)
-          }
-        } else if (temp < maxTempDayCelsius) {
-          gradient.set((temp - minTempDayCelsius) / (maxTempDayCelsius - minTempDayCelsius), color)
-        } else if (!gradient.has(1.0)) {
-          if (temp > maxTempDayCelsius) {
-            gradient.set(1.0, linearizeColor(maxTempDayCelsius, arr[index - 1], [temp, color]))
-          } else {
-            gradient.set(1.0, color)
-          }
-        }
-        return gradient
-      }, new Map<number, Rgb>())
-    )
-
-    if (!outputGradient.has(1.0)) {
-      outputGradient.set(1.0, Array.from(outputGradient.values()).slice(-1)[0])
-    }
-
-    return ([...outputGradient.entries()]
-      .map(([pos, color]) => `${color.toRgbString()} ${Math.round(pos * 100.0)}%`)
-      .join(', ')
-    )
-  }
+  // ── Private helpers ──────────────────────────────────────────────────────
 
   private handleAction (ev: ActionHandlerEvent): void {
     if (this.hass && this.config && ev.detail.action) {
@@ -623,26 +514,16 @@ export class HassWeatherCard extends LitElement {
       : this.toCelsius(unit, temp)
   }
 
-  private calculateBarRangePercents (minTemp: number, maxTemp: number, minTempDay: number, maxTempDay: number): { startPercent: number, endPercent: number } {
-    if (maxTemp === minTemp) {
-      return { startPercent: 0, endPercent: 100 }
-    }
-    const startPercent = (100 / (maxTemp - minTemp)) * (minTempDay - minTemp)
-    const endPercent   = (100 / (maxTemp - minTemp)) * (maxTempDay - minTemp)
-    return {
-      startPercent: Math.max(0, startPercent),
-      endPercent:   Math.min(100, endPercent)
-    }
-  }
-
   private localize (key: string): string {
     return localize(key, this.getLocale())
   }
 
-  private mergeForecasts (maxRowsCount: number, hourly: boolean): MergedWeatherForecast[] {
-    const forecasts = this.isLegacyWeather()
-      ? this.getWeather().attributes.forecast ?? []
-      : this.forecasts ?? []
+  private mergeForecasts (maxRowsCount: number, hourly: boolean, source?: WeatherForecast[]): MergedWeatherForecast[] {
+    const forecasts = source !== undefined
+      ? source
+      : this.isLegacyWeather()
+        ? this.getWeather().attributes.forecast ?? []
+        : this.forecasts ?? []
 
     const agg = forecasts.reduce<Record<number, WeatherForecast[]>>((acc, forecast) => {
       const d = new Date(forecast.datetime)
@@ -707,21 +588,27 @@ export class HassWeatherCard extends LitElement {
       return
     }
 
-    const forecastType = this.determineForecastType()
-    if (forecastType === 'hourly_not_supported') {
-      this.forecastSubscriber = async () => {}
-      this.forecastSubscriberLock = false
-      throw this.createError(`Weather entity [${this.config.entity}] does not support hourly forecast.`)
-    }
+    const supportsDaily  = this.supportsFeature(WeatherEntityFeature.FORECAST_DAILY)
+    const supportsHourly = this.supportsFeature(WeatherEntityFeature.FORECAST_HOURLY)
+    // Use daily when available; fall back to hourly-only entities
+    const primaryType: 'daily' | 'hourly' = supportsDaily ? 'daily' : 'hourly'
+    const options = { resubscribe: false }
     try {
-      const callback = (event: WeatherForecastEvent): void => { this.forecasts = event.forecast }
-      const options = { resubscribe: false }
-      const message = {
-        type: 'weather/subscribe_forecast',
-        forecast_type: forecastType,
-        entity_id: this.config.entity
+      const dailyCallback = (event: WeatherForecastEvent): void => { this.forecasts = event.forecast }
+      this.forecastSubscriber = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(
+        dailyCallback,
+        { type: 'weather/subscribe_forecast', forecast_type: primaryType, entity_id: this.config.entity },
+        options
+      )
+      // Subscribe to hourly separately when entity supports both
+      if (supportsDaily && supportsHourly) {
+        const hourlyCallback = (event: WeatherForecastEvent): void => { this.hourlyForecasts = event.forecast }
+        this.forecastSubscriberHourly = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(
+          hourlyCallback,
+          { type: 'weather/subscribe_forecast', forecast_type: 'hourly', entity_id: this.config.entity },
+          options
+        )
       }
-      this.forecastSubscriber = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(callback, message, options)
     } catch (e: unknown) {
       console.error('hass-weather-card - Error subscribing to weather forecast', e)
     } finally {
@@ -730,15 +617,16 @@ export class HassWeatherCard extends LitElement {
   }
 
   private async unsubscribeForecastEvents (): Promise<void> {
+    const unsubs: Array<Promise<void>> = []
     if (this.forecastSubscriber) {
-      try {
-        await this.forecastSubscriber()
-      } catch (_e) {
-        // connection already closed
-      } finally {
-        this.forecastSubscriber = undefined
-      }
+      unsubs.push(this.forecastSubscriber().catch(() => {}))
+      this.forecastSubscriber = undefined
     }
+    if (this.forecastSubscriberHourly) {
+      unsubs.push(this.forecastSubscriberHourly().catch(() => {}))
+      this.forecastSubscriberHourly = undefined
+    }
+    await Promise.all(unsubs)
   }
 
   private isLegacyWeather (): boolean {
@@ -759,18 +647,6 @@ export class HassWeatherCard extends LitElement {
     errorCard.setConfig({ type: 'error', error, origConfig: this.config })
     this.error = html`${errorCard}`
     return error
-  }
-
-  private determineForecastType (): 'hourly' | 'daily' | 'hourly_not_supported' {
-    const supportsDaily  = this.supportsFeature(WeatherEntityFeature.FORECAST_DAILY)
-    const supportsHourly = this.supportsFeature(WeatherEntityFeature.FORECAST_HOURLY)
-    const hourly = this.config.hourly_forecast
-    if (supportsDaily && supportsHourly) return hourly ? 'hourly' : 'daily'
-    if (hourly && supportsHourly) return 'hourly'
-    if (!hourly && supportsDaily) return 'daily'
-    if (hourly && !supportsHourly) return 'hourly_not_supported'
-    console.warn(`hass-weather-card - Entity [${this.config.entity}] doesn't support daily forecast. Falling back to hourly.`)
-    return 'hourly'
   }
 
   private parseDateTime (date: string): DateTime {

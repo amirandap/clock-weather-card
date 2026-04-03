@@ -360,91 +360,80 @@ ha-card[data-theme="dusk-foggy"] {
     letter-spacing: -0.02em;
   }
 
-  /* ── Forecast rows section */
+  /* ── Forecast strips (v1 layout) */
   .forecast-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 4px;
-    margin-top: 4px;
-  }
-
-  clock-weather-card-forecast-row {
-    display: grid;
-    grid-template-columns: var(--col-one-size) 2rem 2.1rem auto 2.1rem;
-    align-items: center;
-    grid-gap: 0.5rem;
-    padding: 3px 0;
-  }
-
-  forecast-text {
-    text-align: var(--text-align);
-    white-space: nowrap;
-    text-overflow: clip;
-    color: var(--color-text-primary);
-    font-size: 0.9rem;
-    font-weight: 700;
-  }
-
-  forecast-icon {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0;
   }
 
-  forecast-icon img {
+  .forecast-hourly {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 12px;
+    margin-top: 8px;
+  }
+
+  .hour-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .hour-slot__icon {
+    width: 36px;
+    height: 36px;
     filter: var(--icon-filter);
   }
 
-  .grow-img {
-    max-width: 100%;
-    max-height: 100%;
+  .hour-slot__time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
   }
 
-  /* ── Temperature bars */
-  forecast-temperature-bar {
-    position: relative;
-    width: 100%;
-    height: 1.5rem;
-    border-radius: 0.75rem;
-    overflow: hidden;
+  .forecast-daily {
+    display: grid;
+    grid-template-columns: repeat(var(--daily-cols, 4), 1fr);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 12px;
+    margin-top: 8px;
   }
 
-  forecast-temperature-bar-background {
-    left: 0%;
-    right: 100%;
-    width: 100%;
-    opacity: 0.25;
-    background: rgba(255, 255, 255, 0.4);
+  .forecast-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px;
   }
 
-  forecast-temperature-bar-current-indicator-dot {
-    --border-width: 2px;
-    background-color: var(--color-text-primary);
-    border-radius: 50%;
-    width: 1.5rem;
-    box-shadow: inset 0 0 0 var(--border-width) rgba(255,255,255,0.5);
-    margin-left: calc(var(--move-right) * -1 * 1.5rem);
+  .forecast-slot:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
   }
 
-  forecast-temperature-bar-range {
-    border-radius: 0.75rem;
-    left: var(--start-percent);
-    right: calc(100% - var(--end-percent));
-    background: linear-gradient(to right, var(--gradient));
-    overflow: hidden;
-    min-width: 1.5rem;
-    margin-left: calc(var(--move-right) * -1 * 1.5rem);
+  .forecast-slot__icon {
+    width: 36px;
+    height: 36px;
+    filter: var(--icon-filter);
   }
 
-  forecast-temperature-bar-current-indicator {
-    opacity: 0.75;
-    left: var(--position);
+  .forecast-slot__temp {
+    font-size: 1.0rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
   }
 
-  forecast-temperature-bar-current-indicator,
-  forecast-temperature-bar-current-indicator-dot,
-  forecast-temperature-bar-background,
-  forecast-temperature-bar-range {
-    height: 100%;
-    position: absolute;
+  .forecast-slot__day {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
   }
 `

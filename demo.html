@@ -213,8 +213,25 @@
           },
           connection: {
             subscribeMessage: (cb, msg, opts) => {
-              // Immediately call back with fake forecast event
-              setTimeout(() => cb({ forecast: forecasts }), 0);
+              if (msg.forecast_type === 'hourly') {
+                // Generate 4 hourly forecast items starting from the next hour
+                const hourlyForecasts = Array.from({ length: 4 }, (_, i) => {
+                  const d = new Date(now);
+                  d.setHours(d.getHours() + i + 1, 0, 0, 0);
+                  return {
+                    datetime: d.toISOString(),
+                    temperature: tempC + Math.round(Math.random() * 4 - 1),
+                    templow:     tempC - 3,
+                    condition:   condition,
+                    precipitation_probability: Math.round(Math.random() * 80),
+                    precipitation: parseFloat((Math.random() * 3).toFixed(1)),
+                  };
+                });
+                setTimeout(() => cb({ forecast: hourlyForecasts }), 0);
+              } else {
+                // Daily forecast
+                setTimeout(() => cb({ forecast: forecasts }), 0);
+              }
               return Promise.resolve(async () => {});
             },
           },
