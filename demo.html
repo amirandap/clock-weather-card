@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hass-weather-card preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Nunito', sans-serif;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      gap: 32px;
+    }
+
+    h1 { color: #fff; font-size: 1.1rem; font-weight: 700; margin: 0; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.5; }
+
+    /* ── Card container: matches HA Lovelace card width ── */
+    #card-slot {
+      width: 380px;
+      /* overflow:visible so the bleeding corner icon shows */
+      overflow: visible;
+      /* give top padding so the bleed-over icon isn't clipped by the viewport */
+      padding-top: 48px;
+    }
+
+    hass-weather-card {
+      display: block;
+    }
+
+    /* ── Controls panel ── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    select, input[type="number"], input[type="range"] {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      min-width: 160px;
+    }
+
+    select:focus, input:focus { border-color: #555; }
+
+    .badge {
+      display: inline-block;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.78rem;
+      font-family: monospace;
+    }
+
+    #theme-badge { font-weight: 700; color: #aef; }
+  </style>
+</head>
+<body>
+
+  <h1>hass-weather-card &mdash; local preview</h1>
+
+  <div id="card-slot">
+    <hass-weather-card id="card"></hass-weather-card>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Condition</label>
+      <select id="sel-condition">
+        <option value="sunny">sunny</option>
+        <option value="clear-night">clear-night</option>
+        <option value="partlycloudy" selected>partlycloudy</option>
+        <option value="cloudy">cloudy</option>
+        <option value="windy">windy</option>
+        <option value="windy-variant">windy-variant</option>
+        <option value="fog">fog</option>
+        <option value="rainy">rainy</option>
+        <option value="lightning-rainy">lightning-rainy</option>
+        <option value="hail">hail</option>
+        <option value="snowy-rainy">snowy-rainy</option>
+        <option value="pouring">pouring</option>
+        <option value="lightning">lightning</option>
+        <option value="snowy">snowy</option>
+        <option value="exceptional">exceptional</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Time override</label>
+      <select id="sel-period">
+        <option value="auto" selected>Auto (system clock)</option>
+        <option value="night">Night  21:00</option>
+        <option value="dawn">Dawn   06:00</option>
+        <option value="morning">Morning  09:00</option>
+        <option value="afternoon">Afternoon  14:00</option>
+        <option value="dusk">Dusk   18:30</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Temperature (°C)</label>
+      <input type="number" id="inp-temp" value="22" min="-40" max="55" />
+    </div>
+
+    <div class="control-group">
+      <label>Forecast rows</label>
+      <input type="range" id="inp-rows" min="1" max="7" value="5" />
+    </div>
+
+    <div class="control-group">
+      <label>Active theme</label>
+      <span class="badge" id="theme-badge">—</span>
+    </div>
+  </div>
+
+  <!-- Load the built card as a module -->
+  <script type="module" src="dist/hass-weather-card.js"></script>
+
+  <script type="module">
+    // Wait for the custom element to be defined
+    customElements.whenDefined('hass-weather-card').then(() => {
+      const card = document.getElementById('card');
+      const selCondition = document.getElementById('sel-condition');
+      const selPeriod    = document.getElementById('sel-period');
+      const inpTemp      = document.getElementById('inp-temp');
+      const inpRows      = document.getElementById('inp-rows');
+      const themeBadge   = document.getElementById('theme-badge');
+
+      // ── Period → fake hour map ────────────────────────────
+      const PERIOD_HOURS = {
+        night:     21,
+        dawn:       6,
+        morning:    9,
+        afternoon: 14,
+        dusk:      18,
+      };
+
+      // ── Build a minimal mock hass object ─────────────────
+      function buildHass(condition, tempC, overrideHour) {
+        const now = new Date();
+        const hour = (overrideHour != null) ? overrideHour : now.getHours();
+
+        // Fake forecast: 5 days
+        const forecasts = Array.from({ length: 5 }, (_, i) => {
+          const d = new Date(now);
+          d.setDate(d.getDate() + i);
+          return {
+            datetime: d.toISOString(),
+            temperature: tempC + Math.round(Math.random() * 6 - 2),
+            templow:     tempC - 6 + Math.round(Math.random() * 4),
+            condition:   condition,
+            precipitation_probability: Math.round(Math.random() * 100),
+            precipitation: parseFloat((Math.random() * 5).toFixed(1)),
+          };
+        });
+
+        return {
+          states: {
+            'weather.home': {
+              state: condition,
+              attributes: {
+                temperature: tempC,
+                temperature_unit: '°C',
+                humidity: 65,
+                supported_features: 3, // daily + hourly
+                forecast: forecasts,
+              },
+            },
+            'sun.sun': {
+              state: (hour >= 7 && hour < 20) ? 'above_horizon' : 'below_horizon',
+            },
+          },
+          config: {
+            unit_system: { temperature: '°C' },
+            time_zone: 'auto',
+          },
+          locale: {
+            language: 'en',
+            time_format: 'language',
+          },
+          connection: {
+            subscribeMessage: (cb, msg, opts) => {
+              // Immediately call back with fake forecast event
+              setTimeout(() => cb({ forecast: forecasts }), 0);
+              return Promise.resolve(async () => {});
+            },
+          },
+          // Override currentDate inside the element via a fake Luxon-compatible object
+          _fakeHour: hour,
+        };
+      }
+
+      function getOverrideHour() {
+        const p = selPeriod.value;
+        if (p === 'auto') return null;
+        return PERIOD_HOURS[p];
+      }
+
+      function update() {
+        const condition = selCondition.value;
+        const temp      = parseInt(inpTemp.value, 10);
+        const rows      = parseInt(inpRows.value, 10);
+        const overrideHour = getOverrideHour();
+
+        // Re-inject config
+        card.setConfig({
+          entity: 'weather.home',
+          forecast_rows: rows,
+          hourly_forecast: false,
+          animated_icon: true,
+          weather_icon_type: 'line',
+          use_browser_time: true,
+        });
+
+        // Inject mock hass
+        card.hass = buildHass(condition, temp, overrideHour);
+
+        // Override the card's currentDate if there's a period override.
+        // The card uses this.currentDate (Luxon DateTime) for getTimePeriod().
+        // We monkey-patch by accessing the internal property after render.
+        if (overrideHour != null) {
+          // Patch currentDate on next tick so LitElement has processed hass
+          requestAnimationFrame(() => {
+            try {
+              // Access via the Lit internal instance
+              // The property is set on the element instance directly by Luxon
+              const fakeDate = {
+                hour: overrideHour,
+                minute: 0,
+                millisecond: 500,
+                setLocale: (l) => fakeDate,
+                setZone: (z) => ({ ...fakeDate, isValid: true, toFormat: (f) => fakeDate.toFormat(f) }),
+                toFormat: (fmt) => {
+                  const h = overrideHour;
+                  const m = '00';
+                  const hh = String(h).padStart(2, '0');
+                  return fmt === 'HH:mm' ? `${hh}:${m}`
+                    : fmt === 'h:mm a'   ? `${h % 12 || 12}:${m} ${h < 12 ? 'AM' : 'PM'}`
+                    : fmt === 't'        ? `${hh}:${m}`
+                    : `${hh}:${m}`;
+                },
+                toMillis: () => new Date().setHours(overrideHour, 0, 0, 0),
+              };
+              card.currentDate = fakeDate;
+            } catch (e) { /* private property — may fail */ }
+          });
+        }
+
+        // Read back the applied theme after a render cycle
+        requestAnimationFrame(() => {
+          const haCard = card.shadowRoot?.querySelector('ha-card');
+          const theme  = haCard?.getAttribute('data-theme') ?? '—';
+          themeBadge.textContent = theme;
+        });
+      }
+
+      selCondition.addEventListener('change', update);
+      selPeriod.addEventListener('change',    update);
+      inpTemp.addEventListener('input',       update);
+      inpRows.addEventListener('input',       update);
+
+      // Initial render
+      update();
+    });
+  </script>
+</body>
+</html>
