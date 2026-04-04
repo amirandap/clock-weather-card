@@ -1,17 +1,24 @@
-# Clock Weather Card
+# Hass Weather Card
 
-[![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
-[![Total downloads](https://img.shields.io/github/downloads/pkissling/clock-weather-card/total)](https://github.com/pkissling/clock-weather-card/releases)
-[![Downloads of latest version (latest by SemVer)](https://img.shields.io/github/downloads/pkissling/clock-weather-card/latest/total?sort=semver)](https://github.com/pkissling/clock-weather-card/releases/latest)
-[![Current version](https://img.shields.io/github/v/release/pkissling/clock-weather-card)](https://github.com/pkissling/clock-weather-card/releases/latest)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![Current version](https://img.shields.io/github/v/release/amirandap/clock-weather-card)](https://github.com/amirandap/clock-weather-card/releases/latest)
+[![Total downloads](https://img.shields.io/github/downloads/amirandap/clock-weather-card/total)](https://github.com/amirandap/clock-weather-card/releases)
 
-A [Home Assistant Dashboard Card](https://www.home-assistant.io/dashboards/) available through the [Home Assistant Community Store](https://hacs.xyz)
-showing the current date, time and a weather forecast.
-
-![Clock Weather Card](.github/assets/card.gif)
-[^1]
+A [Home Assistant Dashboard Card](https://www.home-assistant.io/dashboards/) with a dynamic animated coastal weather scene, time-of-day sky gradients, Lottie cloud/rain/wind overlays, and live clock + forecast data.
 
 Credits go to [basmilius](https://github.com/basmilius) for the awesome [weather icons](https://github.com/basmilius/weather-icons).
+
+## Installation via HACS
+
+1. Open HACS in Home Assistant.
+2. Click the three-dot menu (⋮) → **Custom repositories**.
+3. Add `https://github.com/amirandap/clock-weather-card` with category **Frontend**.
+4. Click **Install** on **Hass Weather Card**.
+5. Add to your dashboard:
+   ```yaml
+   type: custom:hass-weather-card
+   entity: weather.your_weather_entity
+   ```
 
 ## Migrating from v1 to v2
 
