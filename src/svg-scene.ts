@@ -30,6 +30,24 @@ export interface SkyOpts {
   sunElevation?: number
   /** Sun azimuth in degrees (0=N, 90=E, 180=S, 270=W). */
   sunAzimuth?: number
+  /** Whether the sun is currently rising (true) or setting (false). */
+  sunRising?: boolean
+  /** Cloud coverage percentage (0–100). */
+  cloudCoverage?: number
+  /** Wind speed in km/h. */
+  windSpeed?: number
+  /** Wind gust speed in km/h. */
+  windGustSpeed?: number
+  /** Visibility in km. */
+  visibility?: number
+  /** UV index (0–11+). */
+  uvIndex?: number
+  /** Humidity percentage (0–100). */
+  humidity?: number
+  /** Dew point in °C. */
+  dewPoint?: number
+  /** Atmospheric pressure in hPa. */
+  pressure?: number
 }
 
 interface SkyBodyPos { sunX: number; sunY: number; moonX: number; moonY: number }
@@ -37,6 +55,67 @@ interface UrbanSceneOpts {
   city?: string; beach?: string; foam?: string
   oceanD?: string; oceanM?: string; oceanN?: string
   palm?: string; tint?: string | null; tintOp?: number
+}
+
+/* ── Color interpolation helpers ──────────────────────────────────────── */
+function parseHex (hex: string): [number, number, number] {
+  const h = hex.replace('#', '')
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]
+}
+
+function toHex (r: number, g: number, b: number): string {
+  return '#' + [r,g,b].map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('')
+}
+
+function lerpColor (a: string, b: string, t: number): string {
+  const [r1,g1,b1] = parseHex(a)
+  const [r2,g2,b2] = parseHex(b)
+  return toHex(r1+(r2-r1)*t, g1+(g2-g1)*t, b1+(b2-b1)*t)
+}
+
+/** Interpolate between an ordered list of color stops. t = 0..1 */
+function multiLerp (stops: Array<[number, string]>, t: number): string {
+  if (t <= stops[0][0]) return stops[0][1]
+  if (t >= stops[stops.length-1][0]) return stops[stops.length-1][1]
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i][0] && t <= stops[i+1][0]) {
+      const local = (t - stops[i][0]) / (stops[i+1][0] - stops[i][0])
+      return lerpColor(stops[i][1], stops[i+1][1], local)
+    }
+  }
+  return stops[stops.length-1][1]
+}
+
+/**
+ * Convert sun elevation (-90..90) to a continuous "daylight factor" (0..1).
+ *   -18° or below → 0 (astronomical night)
+ *    0°           → 0.35 (horizon)
+ *   +60° or above → 1 (full day)
+ */
+function elevationToDayFactor (elev: number): number {
+  if (elev <= -18) return 0
+  if (elev >= 60)  return 1
+  if (elev <= 0)   return 0.35 * ((elev + 18) / 18)       // -18..0 → 0..0.35
+  return 0.35 + 0.65 * (elev / 60)                        //  0..60 → 0.35..1
+}
+
+/**
+ * Determine the continuous time period from sun elevation.
+ * Returns the discrete period name for scene selection
+ * plus a dayFactor (0..1) for progressive colour blending.
+ */
+export function elevationToPeriod (elev: number | undefined, rising?: boolean): { period: string; dayFactor: number } {
+  if (elev === undefined) return { period: 'afternoon', dayFactor: 1 }
+
+  const factor = elevationToDayFactor(elev)
+  if (elev <= -6)  return { period: 'night', dayFactor: factor }
+  if (elev <= 1) {
+    return rising !== false
+      ? { period: 'dawn', dayFactor: factor }
+      : { period: 'dusk', dayFactor: factor }
+  }
+  if (elev <= 25) return { period: 'morning', dayFactor: factor }
+  return { period: 'afternoon', dayFactor: factor }
 }
 
 /* ══════════════════════════════════════════════════════════════════════ */
@@ -306,7 +385,7 @@ function gradientStops (stops: Array<[number, string]>): string {
  *
  * @param condition  HA weather condition string (e.g. 'sunny', 'rainy')
  * @param period     Time period: 'night' | 'dawn' | 'morning' | 'afternoon' | 'dusk'
- * @param opts       Optional sun elevation/azimuth from HA sun.sun entity
+ * @param opts       Optional data from HA sun.sun + weather entity attributes
  */
 export function buildBackground (condition: string, period: string, opts: SkyOpts = {}): string {
   const effectivePeriod = condition === 'clear-night' ? 'night' : period
@@ -321,25 +400,57 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
   const isCloudy = group === 'cloudy' || group === 'foggy'
   const isSnowy  = group === 'snowy'
   const isPartly = group === 'partly-cloudy'
+  const isFoggy  = group === 'foggy'
 
   const pos = getSkyBodyPos(effectivePeriod, opts)
+
+  // ── Data-driven modifiers ────────────────────────────────────────────
+  // Continuous day factor from sun elevation (0 = deep night, 1 = full day)
+  const dayFactor = typeof opts.sunElevation === 'number'
+    ? elevationToDayFactor(opts.sunElevation)
+    : (isNight ? 0 : isDawn || isDusk ? 0.30 : 0.85)
+
+  // Cloud coverage (0..1) — modulates cloud opacity and sky desaturation
+  const cc = typeof opts.cloudCoverage === 'number'
+    ? Math.max(0, Math.min(1, opts.cloudCoverage / 100))
+    : (isCloudy ? 0.85 : isPartly ? 0.45 : isRainy || isStormy ? 0.95 : 0)
+
+  // Visibility factor (1 = clear 10km+, 0 = near-zero fog)
+  const visFactor = typeof opts.visibility === 'number'
+    ? Math.max(0, Math.min(1, opts.visibility / 10))
+    : (isFoggy ? 0.25 : 1)
+
   let skyGrad: string
   let skyContent: string
   let land: string
 
   if (isNight) {
-    skyGrad    = gradient('#060D1C', '#0F1E3A')
+    // Progressive night sky: blend between deep night and twilight based on dayFactor
+    const topColor    = lerpColor('#060D1C', '#1A2848', dayFactor * 2)
+    const bottomColor = lerpColor('#0F1E3A', '#2A3858', dayFactor * 2)
+    skyGrad    = gradient(topColor, bottomColor)
     skyContent = svgStars() + svgMoon(pos.moonX, pos.moonY)
     land = svgUrbanScene({ city: '#060B16', beach: '#2A2418', foam: '#071018', oceanD: '#071018', oceanM: '#040C14', oceanN: '#030910', palm: '#03060C', tint: '#010610', tintOp: 0.60 })
 
   } else if (isDawn) {
-    skyGrad    = gradientStops([[0,'#28105A'],[32,'#A82812'],[66,'#E07416'],[100,'#F8BC3C']])
-    skyContent = svgSun(pos.sunX, pos.sunY, 0.92) + svgHorizonGlow('#FF8C1C', pos.sunX, pos.sunY)
+    // Progressive dawn: blend from deep purple → warm orange based on dayFactor
+    const df = Math.max(0, Math.min(1, (dayFactor - 0.1) / 0.3))
+    const top = lerpColor('#0F0828', '#28105A', df)
+    const mid1 = lerpColor('#3A1420', '#A82812', df)
+    const mid2 = lerpColor('#804020', '#E07416', df)
+    const bot = lerpColor('#C06020', '#F8BC3C', df)
+    skyGrad    = gradientStops([[0, top], [32, mid1], [66, mid2], [100, bot]])
+    skyContent = svgSun(pos.sunX, pos.sunY, 0.65 + df * 0.27) + svgHorizonGlow('#FF8C1C', pos.sunX, pos.sunY)
     land = svgUrbanScene({ city: '#1A2240', beach: '#C08840', foam: '#E09040', oceanD: '#2065A0', oceanM: '#153870', oceanN: '#0D2448', palm: '#13171E' })
 
   } else if (isDusk) {
-    skyGrad    = gradientStops([[0,'#682A8A'],[32,'#C84428'],[66,'#EE8418'],[100,'#F8C23C']])
-    skyContent = svgSun(pos.sunX, pos.sunY, 0.88) + svgHorizonGlow('#FF6C1C', pos.sunX, pos.sunY)
+    const df = Math.max(0, Math.min(1, (dayFactor - 0.1) / 0.3))
+    const top = lerpColor('#1A0838', '#682A8A', df)
+    const mid1 = lerpColor('#4A1820', '#C84428', df)
+    const mid2 = lerpColor('#905020', '#EE8418', df)
+    const bot = lerpColor('#C87020', '#F8C23C', df)
+    skyGrad    = gradientStops([[0, top], [32, mid1], [66, mid2], [100, bot]])
+    skyContent = svgSun(pos.sunX, pos.sunY, 0.55 + df * 0.33) + svgHorizonGlow('#FF6C1C', pos.sunX, pos.sunY)
     land = svgUrbanScene({ city: '#181830', beach: '#A87028', foam: '#CC7235', oceanD: '#1D4870', oceanM: '#133060', oceanN: '#0C1E40', palm: '#11101A' })
 
   } else if (isStormy) {
@@ -363,21 +474,38 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
     land = svgUrbanScene({ city: '#2A3050', beach: '#C8CAC8', foam: '#D8E0E8', oceanD: '#3C6898', oceanM: '#283860', oceanN: '#182440', palm: '#1E2838' })
 
   } else if (isCloudy) {
-    skyGrad    = gradient('#6482A0', '#82A6BA')
-    skyContent = svgOvercast('#7EA0B2')
-    land = svgUrbanScene({ city: '#1C2840', beach: '#A89868', foam: '#507090', oceanD: '#2A5890', oceanM: '#1C3C68', oceanN: '#0E2448', palm: '#161E28', tint: '#203040', tintOp: 0.16 })
+    // Progressive cloudy: desaturate the sunny sky based on cloud coverage
+    const topClear = '#42B0E2'
+    const botClear = '#72C8EE'
+    const topOver  = '#6482A0'
+    const botOver  = '#82A6BA'
+    skyGrad    = gradient(lerpColor(topClear, topOver, cc), lerpColor(botClear, botOver, cc))
+    const cloudAlpha = 0.55 + cc * 0.40
+    skyContent = cc > 0.65
+      ? svgOvercast(lerpColor('#A0B8C8', '#7EA0B2', cc))
+      : svgSun(pos.sunX, pos.sunY, 1 - cc) + svgClouds(cloudAlpha)
+    land = svgUrbanScene({ city: '#1C2840', beach: '#A89868', foam: '#507090', oceanD: '#2A5890', oceanM: '#1C3C68', oceanN: '#0E2448', palm: '#161E28', tint: '#203040', tintOp: cc * 0.20 })
 
   } else if (isPartly) {
+    // Cloud coverage modulates how many clouds are drawn
+    const cloudAlpha = 0.55 + cc * 0.45
     skyGrad    = gradient('#42B0E2', '#72C8EE')
-    skyContent = svgSun(pos.sunX, pos.sunY, 0.84) + svgClouds(0.96)
+    skyContent = svgSun(pos.sunX, pos.sunY, Math.max(0.50, 1 - cc * 0.5)) + svgClouds(cloudAlpha)
     land = svgUrbanScene({})
 
   } else {
-    /* Sunny */
-    skyGrad    = gradientStops([[0,'#40ACDF'],[65,'#65C5EC'],[100,'#85D5F0']])
+    /* Sunny — progressive daylight color based on sun elevation */
+    const topColor = multiLerp([[0, '#65A5D0'], [0.4, '#40ACDF'], [0.7, '#2C98D8'], [1, '#1880C8']], dayFactor)
+    const botColor = multiLerp([[0, '#A0D4E8'], [0.4, '#85D5F0'], [0.7, '#65C5EC'], [1, '#50B8E4']], dayFactor)
+    skyGrad    = gradientStops([[0, topColor], [65, lerpColor(topColor, botColor, 0.6)], [100, botColor]])
     skyContent = svgSun(pos.sunX, pos.sunY, 1.0)
     land = svgUrbanScene({})
   }
+
+  // ── Visibility / fog overlay ───────────────────────────────────────
+  const fogOverlay = visFactor < 0.85
+    ? `<rect width="390" height="660" fill="white" opacity="${((1 - visFactor) * 0.35).toFixed(2)}"/>`
+    : ''
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 660" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
 <defs>
@@ -391,6 +519,7 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
 <rect width="390" height="660" fill="url(#gSky)"/>
 ${skyContent}
 ${land}
+${fogOverlay}
 <rect y="370" width="390" height="290" fill="url(#gScrim)"/>
 </svg>`
 }

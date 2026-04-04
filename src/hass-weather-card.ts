@@ -35,7 +35,7 @@ import { safeRender } from './helpers'
 import { DateTime } from 'luxon'
 import { DotLottie } from '@lottiefiles/dotlottie-web'
 import { CLOUDS_LOTTIE, RAIN_LOTTIE, WIND_LOTTIE } from './lottie-assets'
-import { buildBackground, type SkyOpts } from './svg-scene'
+import { buildBackground, type SkyOpts, elevationToPeriod } from './svg-scene'
 
 console.info(
   `%c  HASS-WEATHER-CARD \n%c Version: ${version}`,
@@ -161,6 +161,12 @@ export class HassWeatherCard extends LitElement {
       if (oldSun !== newSun) {
         return true
       }
+      // Re-render when weather entity attributes change (cloud_coverage, wind, etc.)
+      const oldWeather = oldHass.states[this.config.entity]
+      const newWeather = this.hass.states[this.config.entity]
+      if (oldWeather !== newWeather) {
+        return true
+      }
     }
     return hasConfigOrEntityChanged(this, changedProps, false)
   }
@@ -242,10 +248,23 @@ export class HassWeatherCard extends LitElement {
     // CSS filter tints the cloud canvas to match the sky mood
     canvasClouds.style.filter = CLOUD_FILTER[group] ?? 'none'
 
-    // Playback speed per condition intensity
-    this._lottieCloud?.setSpeed(CLOUD_SPEED[group] ?? 1.0)
+    // Use actual wind_speed from weather entity when available for cloud/wind speed
+    const weather = this.hass?.states?.[this.config?.entity]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wAttrs = ((weather as any)?.attributes ?? {}) as Record<string, unknown>
+    const windKmh = typeof wAttrs.wind_speed === 'number' ? wAttrs.wind_speed : undefined
+
+    // Playback speed: use real wind data or fall back to condition-based lookup
+    if (windKmh !== undefined) {
+      // Scale: 0 km/h → 0.3x, 30 km/h → 1.0x, 80+ km/h → 2.5x
+      const windFactor = Math.min(2.5, 0.3 + (windKmh / 30) * 0.7)
+      this._lottieCloud?.setSpeed(windFactor)
+      if (showWind) this._lottieWind?.setSpeed(windFactor * 1.2)
+    } else {
+      this._lottieCloud?.setSpeed(CLOUD_SPEED[group] ?? 1.0)
+      if (showWind) this._lottieWind?.setSpeed(1.8)
+    }
     if (showRain) this._lottieRain?.setSpeed(RAIN_SPEED[group] ?? 1.0)
-    if (showWind) this._lottieWind?.setSpeed(1.8)
   }
 
   // ── SVG scene background ────────────────────────────────────────────
@@ -253,18 +272,32 @@ export class HassWeatherCard extends LitElement {
   /**
    * Returns the SVG HTML string for the coastal scene background.
    * Uses the HA sun.sun entity attributes (elevation, azimuth) when
-   * available to precisely position the sun/moon.
+   * available to precisely position the sun/moon, plus weather entity
+   * attributes for data-driven rendering.
    */
   private renderSceneBg (): string {
     try {
-      const condition = this.getWeather().state
+      const weather   = this.getWeather()
+      const condition = weather.state
       const period    = this.getTimePeriod()
       const sun       = this.getSun()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const attrs     = (sun?.attributes ?? {}) as Record<string, unknown>
+      const sunAttrs  = (sun?.attributes ?? {}) as Record<string, unknown>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wAttrs    = (weather.attributes ?? {}) as Record<string, unknown>
+
       const opts: SkyOpts = {
-        sunElevation: typeof attrs.elevation === 'number' ? attrs.elevation : undefined,
-        sunAzimuth:   typeof attrs.azimuth   === 'number' ? attrs.azimuth   : undefined,
+        sunElevation:  typeof sunAttrs.elevation  === 'number' ? sunAttrs.elevation  : undefined,
+        sunAzimuth:    typeof sunAttrs.azimuth    === 'number' ? sunAttrs.azimuth    : undefined,
+        sunRising:     typeof sunAttrs.rising     === 'boolean' ? sunAttrs.rising    : undefined,
+        cloudCoverage: typeof wAttrs.cloud_coverage === 'number' ? wAttrs.cloud_coverage : undefined,
+        windSpeed:     typeof wAttrs.wind_speed     === 'number' ? wAttrs.wind_speed     : undefined,
+        windGustSpeed: typeof wAttrs.wind_gust_speed === 'number' ? wAttrs.wind_gust_speed : undefined,
+        visibility:    typeof wAttrs.visibility     === 'number' ? wAttrs.visibility     : undefined,
+        uvIndex:       typeof wAttrs.uv_index       === 'number' ? wAttrs.uv_index       : undefined,
+        humidity:      typeof wAttrs.humidity        === 'number' ? wAttrs.humidity        : undefined,
+        dewPoint:      typeof wAttrs.dew_point       === 'number' ? wAttrs.dew_point       : undefined,
+        pressure:      typeof wAttrs.pressure        === 'number' ? wAttrs.pressure        : undefined,
       }
       return buildBackground(condition, period, opts)
     } catch (_e) {
@@ -275,6 +308,15 @@ export class HassWeatherCard extends LitElement {
   // ── Theme ───────────────────────────────────────────────────────────────
 
   private getTimePeriod (): string {
+    // Prefer sun.sun entity elevation for accurate period detection
+    const sun = this.getSun()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const attrs = (sun?.attributes ?? {}) as Record<string, unknown>
+    if (typeof attrs.elevation === 'number') {
+      const rising = typeof attrs.rising === 'boolean' ? attrs.rising : undefined
+      return elevationToPeriod(attrs.elevation, rising).period
+    }
+    // Fallback to time-based detection
     const totalMinutes = this.currentDate.hour * 60 + this.currentDate.minute
     if (totalMinutes >= 1260 || totalMinutes < 330) return 'night'     // 21:00–05:29
     if (totalMinutes < 450)  return 'dawn'       // 05:30–07:29
