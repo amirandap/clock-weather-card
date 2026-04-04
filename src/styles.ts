@@ -252,6 +252,21 @@ ha-card[data-theme="dusk-foggy"] {
   --icon-filter: brightness(0) invert(1) sepia(0.4) saturate(2) hue-rotate(10deg) drop-shadow(0 4px 12px rgba(0,0,0,0.4));
 }
 
+  /* ── SVG coastal scene background layer */
+  .card-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--ha-card-border-radius, 12px);
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .card-bg svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
   /* ── Full-card Lottie background layer */
   .lottie-layer {
     position: absolute;
@@ -264,15 +279,36 @@ ha-card[data-theme="dusk-foggy"] {
 
   .lottie-layer canvas {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
     opacity: 0;
     transition: opacity 1.4s ease;
   }
 
+  /* Clouds: canvas top:-50% so the animation's lower half aligns with card sky top */
+  #lottieCanvasClouds {
+    top:    -50%;
+    left:   0;
+    width:  100%;
+    height: 100%;
+  }
+
+  /* Rain: full-card overlay */
+  #lottieCanvasRain {
+    inset: 0;
+    width:  100%;
+    height: 100%;
+  }
+
+  /* Wind streaks: sky + city horizon band */
+  #lottieCanvasWind {
+    top:  0;
+    left: 0;
+    width:  100%;
+    height: 65%;
+  }
+
   #lottieCanvasClouds.is-visible { opacity: 0.30; }
   #lottieCanvasRain.is-visible   { opacity: 0.65; }
+  #lottieCanvasWind.is-visible   { opacity: 0.48; }
 
   /* ── Overflowing corner icon */
   .bg-icon {

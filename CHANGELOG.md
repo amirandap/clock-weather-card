@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.9.5] (2026-04-XX)
+
+### Features
+
+* **visual**: Full coastal SVG island scene background — dynamic ocean, beach, city skyline, and palm grove rendered behind the lottie layer. Changes colour palette and horizon scene per weather condition and time-of-day period.
+* **lottie**: Wind lottie animation — 10 horizontal speed-streaks animate across the sky for `windy` / `windy-variant` conditions.
+* **lottie**: Cloud lottie canvas repositioned to show cloud layers at the TOP of the sky area (previously mid-card). Canvas uses a negative top offset so the animation's lower half (where clouds live) aligns with the card's sky region.
+* **lottie**: CSS filter + setSpeed applied to the cloud canvas per condition group — darker/warmer tints for rain/storm, brighter/desaturated for snow, fast drift for storms, slow drift for fog.
+* **sun**: Morning snapped sun position is now directly below the "Sunny" condition text instead of above the clock.
+* **sun**: `sun.sun` HA entity integration — when the sun entity provides `elevation` and `azimuth` attributes, the SVG sun/moon is positioned precisely from real HA data rather than time-based snapping.
+* **condition**: `windy` and `windy-variant` conditions now render their own visual group (`windy` slug) with a blue-sky gradient, partial clouds, and wind lottie — separate from the generic `cloudy` group.
+
 ## [2.9.3] (2026-04-03)
 
 

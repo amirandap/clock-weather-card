@@ -1,4 +1,5 @@
 import { LitElement, html, type TemplateResult, type PropertyValues, type CSSResultGroup } from 'lit'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customElement, property, state } from 'lit/decorators.js'
 import {
@@ -33,7 +34,8 @@ import { version } from '../package.json'
 import { safeRender } from './helpers'
 import { DateTime } from 'luxon'
 import { DotLottie } from '@lottiefiles/dotlottie-web'
-import { CLOUDS_LOTTIE, RAIN_LOTTIE } from './lottie-assets'
+import { CLOUDS_LOTTIE, RAIN_LOTTIE, WIND_LOTTIE } from './lottie-assets'
+import { buildBackground, type SkyOpts } from './svg-scene'
 
 console.info(
   `%c  HASS-WEATHER-CARD \n%c Version: ${version}`,
@@ -55,8 +57,8 @@ const CONDITION_GROUP: Record<string, string> = {
   'sunny':           'sunny',
   'partlycloudy':    'partly-cloudy',
   'cloudy':          'cloudy',
-  'windy':           'cloudy',
-  'windy-variant':   'cloudy',
+  'windy':           'windy',
+  'windy-variant':   'windy',
   'fog':             'foggy',
   'rainy':           'rainy',
   'lightning-rainy': 'rainy',
@@ -68,9 +70,30 @@ const CONDITION_GROUP: Record<string, string> = {
   'exceptional':     'cloudy',
 }
 
-// Condition groups that trigger cloud / rain lottie layers
-const LOTTIE_CLOUDS_GROUPS = new Set(['sunny', 'partly-cloudy', 'cloudy', 'foggy', 'snowy'])
+// Condition groups that trigger cloud / rain / wind lottie layers
+const LOTTIE_CLOUDS_GROUPS = new Set(['sunny', 'partly-cloudy', 'cloudy', 'foggy', 'snowy', 'windy'])
 const LOTTIE_RAIN_GROUPS   = new Set(['rainy', 'pouring', 'stormy'])
+const LOTTIE_WIND_GROUPS   = new Set(['windy'])
+
+// CSS filter tints the cloud canvas to match sky mood
+const CLOUD_FILTER: Record<string, string> = {
+  'sunny':         'none',
+  'partly-cloudy': 'none',
+  'cloudy':        'brightness(0.78) saturate(0.30)',
+  'foggy':         'brightness(0.84) saturate(0.05)',
+  'snowy':         'brightness(1.15) saturate(0.15) hue-rotate(180deg)',
+  'rainy':         'brightness(0.66) saturate(0.55) hue-rotate(195deg)',
+  'pouring':       'brightness(0.52) saturate(0.65) hue-rotate(202deg)',
+  'stormy':        'brightness(0.38) saturate(0.70) hue-rotate(212deg)',
+  'windy':         'brightness(1.08) saturate(0.40)',
+}
+
+// Playback speed: clouds drift faster in storms; rain speed matches intensity
+const CLOUD_SPEED: Record<string, number> = {
+  'sunny': 0.50, 'partly-cloudy': 0.65, 'cloudy': 0.90, 'foggy': 0.40,
+  'snowy': 0.55, 'rainy': 1.00, 'pouring': 1.30, 'stormy': 1.80, 'windy': 1.60,
+}
+const RAIN_SPEED: Record<string, number> = { 'rainy': 0.85, 'pouring': 1.55, 'stormy': 2.30 }
 
 @customElement('hass-weather-card')
 export class HassWeatherCard extends LitElement {
@@ -86,6 +109,7 @@ export class HassWeatherCard extends LitElement {
   private forecastSubscriberLock = false
   private _lottieCloud?: DotLottie
   private _lottieRain?: DotLottie
+  private _lottieWind?: DotLottie
 
   constructor () {
     super()
@@ -160,16 +184,17 @@ export class HassWeatherCard extends LitElement {
   // ── Lottie lifecycle ────────────────────────────────────────────────────
 
   private initLottie (): void {
-    const card = this.shadowRoot?.querySelector('.card-body')
+    const haCard       = this.shadowRoot?.querySelector('ha-card')
     const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
     const canvasRain   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
-    if (!canvasClouds || !canvasRain || !card) return
+    const canvasWind   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
+    if (!canvasClouds || !canvasRain || !haCard) return
 
     // Set canvas drawing buffer to full card dimensions
-    const w = card.clientWidth  || 460
-    const h = card.clientHeight || 560
-    canvasClouds.width  = w; canvasClouds.height  = h
-    canvasRain.width    = w; canvasRain.height    = h
+    const w = haCard.clientWidth  || 460
+    const h = haCard.clientHeight || 560
+    canvasClouds.width  = w;  canvasClouds.height = h
+    canvasRain.width    = w;  canvasRain.height   = h
 
     this._lottieCloud = new DotLottie({
       canvas:   canvasClouds,
@@ -186,14 +211,65 @@ export class HassWeatherCard extends LitElement {
       autoplay: true,
       renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
+
+    if (canvasWind) {
+      canvasWind.width  = w
+      canvasWind.height = Math.round(h * 0.65)
+      this._lottieWind = new DotLottie({
+        canvas:   canvasWind,
+        src:      WIND_LOTTIE,
+        loop:     true,
+        autoplay: true,
+        renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+      })
+    }
   }
 
   private updateLottie (group: string): void {
     const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
     const canvasRain   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
+    const canvasWind   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain) return
-    canvasClouds.classList.toggle('is-visible', LOTTIE_CLOUDS_GROUPS.has(group))
-    canvasRain.classList.toggle('is-visible',   LOTTIE_RAIN_GROUPS.has(group))
+
+    const showClouds = LOTTIE_CLOUDS_GROUPS.has(group)
+    const showRain   = LOTTIE_RAIN_GROUPS.has(group)
+    const showWind   = LOTTIE_WIND_GROUPS.has(group)
+
+    canvasClouds.classList.toggle('is-visible', showClouds)
+    canvasRain.classList.toggle('is-visible',   showRain)
+    canvasWind?.classList.toggle('is-visible',  showWind)
+
+    // CSS filter tints the cloud canvas to match the sky mood
+    canvasClouds.style.filter = CLOUD_FILTER[group] ?? 'none'
+
+    // Playback speed per condition intensity
+    this._lottieCloud?.setSpeed(CLOUD_SPEED[group] ?? 1.0)
+    if (showRain) this._lottieRain?.setSpeed(RAIN_SPEED[group] ?? 1.0)
+    if (showWind) this._lottieWind?.setSpeed(1.8)
+  }
+
+  // ── SVG scene background ────────────────────────────────────────────
+
+  /**
+   * Returns the SVG HTML string for the coastal scene background.
+   * Uses the HA sun.sun entity attributes (elevation, azimuth) when
+   * available to precisely position the sun/moon.
+   */
+  private renderSceneBg (): string {
+    try {
+      const condition = this.getWeather().state
+      const period    = this.getTimePeriod()
+      const sun       = this.getSun()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const attrs     = (sun?.attributes ?? {}) as Record<string, unknown>
+      const opts: SkyOpts = {
+        sunElevation: typeof attrs.elevation === 'number' ? attrs.elevation : undefined,
+        sunAzimuth:   typeof attrs.azimuth   === 'number' ? attrs.azimuth   : undefined,
+      }
+      return buildBackground(condition, period, opts)
+    } catch (_e) {
+      return buildBackground('sunny', 'afternoon', {})
+    }
   }
 
   // ── Theme ───────────────────────────────────────────────────────────────
@@ -244,10 +320,16 @@ export class HassWeatherCard extends LitElement {
         tabindex="0"
         .label=${`Hass Weather Card: ${this.config.entity || 'No Entity Defined'}`}
       >
+        <!-- SVG coastal scene background, z-index 0 -->
+        <div class="card-bg" aria-hidden="true">
+          ${unsafeHTML(this.renderSceneBg())}
+        </div>
+
         <!-- Full-card lottie BG, z-index 0 -->
         <div class="lottie-layer" aria-hidden="true">
           <canvas id="lottieCanvasClouds"></canvas>
           <canvas id="lottieCanvasRain"></canvas>
+          <canvas id="lottieCanvasWind"></canvas>
         </div>
 
         <!-- Corner bleed icon, z-index 3 -->
@@ -281,6 +363,7 @@ export class HassWeatherCard extends LitElement {
     void this.unsubscribeForecastEvents()
     this._lottieCloud?.destroy()
     this._lottieRain?.destroy()
+    this._lottieWind?.destroy()
   }
 
   protected willUpdate (changedProps: PropertyValues): void {
