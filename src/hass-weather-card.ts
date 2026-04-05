@@ -431,13 +431,19 @@ export class HassWeatherCard extends LitElement {
     const tempUnit       = weather.attributes.temperature_unit
     const weatherString  = this.localize(`weather.${weather.state}`)
     const localizedTemp  = temp !== null ? this.toConfiguredTempWithUnit(tempUnit, temp) : 'n/a'
+    const subSize        = `${this.config.sub_font_size}rem`
+
+    const isTimeHero = this.config.hero_display === 'time'
+
+    const heroMain = isTimeHero ? this.time() : localizedTemp
+    const metaSub  = isTimeHero ? localizedTemp : this.time()
 
     return html`
       <div class="hero">
-        <p class="temp">${localizedTemp}</p>
-        <div class="meta-row">
+        <p class="temp">${heroMain}</p>
+        <div class="meta-row" style="font-size:${subSize}">
           <span class="condition">${weatherString}</span>
-          <span class="current-time">${this.time()}</span>
+          <span class="current-time">${metaSub}</span>
         </div>
       </div>
     `
@@ -501,6 +507,7 @@ export class HassWeatherCard extends LitElement {
     return {
       ...config,
       sun_entity: config.sun_entity ?? 'sun.sun',
+      climate_entity: config.climate_entity ?? undefined,
       temperature_sensor: config.temperature_sensor,
       humidity_sensor: config.humidity_sensor,
       weather_icon_type: config.weather_icon_type ?? 'line',
@@ -519,7 +526,9 @@ export class HassWeatherCard extends LitElement {
       time_zone: config.time_zone ?? undefined,
       show_decimal: config.show_decimal ?? false,
       apparent_sensor: config.apparent_sensor ?? undefined,
-      aqi_sensor: config.aqi_sensor ?? undefined
+      aqi_sensor: config.aqi_sensor ?? undefined,
+      hero_display: config.hero_display ?? 'temperature',
+      sub_font_size: config.sub_font_size ?? 1.7
     }
   }
 

@@ -13,6 +13,7 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   entity: string
   title?: string
   sun_entity?: string
+  climate_entity?: string
   temperature_sensor?: string
   humidity_sensor?: string
   weather_icon_type?: 'fill' | 'line'
@@ -33,12 +34,17 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   show_decimal?: boolean
   apparent_sensor?: string
   aqi_sensor?: string
+  /** What the hero shows: 'temperature' (default) or 'time' */
+  hero_display?: 'temperature' | 'time'
+  /** Sub-text font size in rem (default: 1.7) */
+  sub_font_size?: number
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   entity: string
   title?: string
   sun_entity: string
+  climate_entity?: string
   temperature_sensor?: string
   humidity_sensor?: string
   weather_icon_type: 'fill' | 'line'
@@ -59,6 +65,8 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   show_decimal: boolean
   apparent_sensor?: string
   aqi_sensor?: string
+  hero_display: 'temperature' | 'time'
+  sub_font_size: number
 }
 
 export const enum WeatherEntityFeature {

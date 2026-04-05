@@ -38,43 +38,43 @@ export default css`
 /* ─── NIGHT  21:00 – 05:29  ─── deep cool dark ──────────── */
 ha-card[data-theme="night-sunny"],
 ha-card[data-theme="night-clear"] {
-  --widget-gradient: linear-gradient(148deg, #1c2d6a 0%, #101e4e 45%, #070e2e 100%);
-  --shadow-tint: rgba(7, 14, 46, 0.7);
+  --widget-gradient: linear-gradient(148deg, #243868 0%, #182848 45%, #0E1830 100%);
+  --shadow-tint: rgba(14, 24, 48, 0.7);
   --icon-filter: brightness(0) invert(1) sepia(0.2) saturate(2.5) hue-rotate(215deg) drop-shadow(0 4px 12px rgba(0,0,0,0.55));
 }
 ha-card[data-theme="night-partly-cloudy"] {
-  --widget-gradient: linear-gradient(148deg, #182848 0%, #0e1c36 45%, #060e1e 100%);
-  --shadow-tint: rgba(6, 14, 30, 0.7);
+  --widget-gradient: linear-gradient(148deg, #1E3050 0%, #142438 45%, #0C1828 100%);
+  --shadow-tint: rgba(12, 24, 40, 0.7);
   --icon-filter: brightness(0) invert(1) sepia(0.2) saturate(2) hue-rotate(210deg) drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 ha-card[data-theme="night-cloudy"] {
-  --widget-gradient: linear-gradient(148deg, #141e28 0%, #0c141e 45%, #060a10 100%);
-  --shadow-tint: rgba(6, 10, 16, 0.75);
+  --widget-gradient: linear-gradient(148deg, #1A2832 0%, #121C28 45%, #0A1218 100%);
+  --shadow-tint: rgba(10, 18, 24, 0.75);
   --icon-filter: brightness(0) invert(1) sepia(0.15) saturate(1.5) hue-rotate(205deg) drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 ha-card[data-theme="night-rainy"] {
-  --widget-gradient: linear-gradient(148deg, #0e1e30 0%, #081420 45%, #04090e 100%);
-  --shadow-tint: rgba(4, 9, 14, 0.8);
+  --widget-gradient: linear-gradient(148deg, #142838 0%, #0E1C28 45%, #081018 100%);
+  --shadow-tint: rgba(8, 16, 24, 0.8);
   --icon-filter: brightness(0) invert(1) sepia(0.15) saturate(2) hue-rotate(205deg) drop-shadow(0 4px 12px rgba(0,0,0,0.55));
 }
 ha-card[data-theme="night-pouring"] {
-  --widget-gradient: linear-gradient(148deg, #080e18 0%, #040810 45%, #020508 100%);
-  --shadow-tint: rgba(2, 5, 8, 0.88);
+  --widget-gradient: linear-gradient(148deg, #101820 0%, #0A1018 45%, #060A10 100%);
+  --shadow-tint: rgba(6, 10, 16, 0.85);
   --icon-filter: brightness(0) invert(1) sepia(0.1) saturate(2.5) hue-rotate(205deg) drop-shadow(0 4px 12px rgba(0,0,0,0.6));
 }
 ha-card[data-theme="night-stormy"] {
-  --widget-gradient: linear-gradient(148deg, #0e0e12 0%, #08080e 45%, #040408 100%);
-  --shadow-tint: rgba(4, 4, 8, 0.88);
+  --widget-gradient: linear-gradient(148deg, #12141A 0%, #0C0E14 45%, #060810 100%);
+  --shadow-tint: rgba(6, 8, 16, 0.85);
   --icon-filter: brightness(0) invert(1) sepia(0.1) saturate(2.5) hue-rotate(215deg) drop-shadow(0 4px 12px rgba(0,0,0,0.65));
 }
 ha-card[data-theme="night-snowy"] {
-  --widget-gradient: linear-gradient(148deg, #1a2244 0%, #0e1630 45%, #060c1c 100%);
-  --shadow-tint: rgba(6, 12, 28, 0.7);
+  --widget-gradient: linear-gradient(148deg, #222C50 0%, #162040 45%, #0C1428 100%);
+  --shadow-tint: rgba(12, 20, 40, 0.7);
   --icon-filter: brightness(0) invert(1) sepia(0.1) saturate(2) hue-rotate(195deg) drop-shadow(0 4px 12px rgba(0,0,0,0.45));
 }
 ha-card[data-theme="night-foggy"] {
-  --widget-gradient: linear-gradient(148deg, #18181e 0%, #101014 45%, #08080c 100%);
-  --shadow-tint: rgba(8, 8, 12, 0.75);
+  --widget-gradient: linear-gradient(148deg, #1E2028 0%, #161820 45%, #0E1014 100%);
+  --shadow-tint: rgba(14, 16, 20, 0.75);
   --icon-filter: brightness(0) invert(1) sepia(0.1) saturate(1.2) hue-rotate(200deg) drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 
@@ -381,7 +381,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .condition {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     font-weight: 800;
     color: var(--color-text-primary);
     line-height: 1.1;
@@ -389,7 +389,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .current-time {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     font-weight: 700;
     color: var(--color-text-secondary);
     line-height: 1;

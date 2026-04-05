@@ -148,8 +148,10 @@ function svgSun (cx: number, cy: number, opacity: number): string {
 function svgMoon (cx: number, cy: number): string {
   return `
 <g transform="translate(${cx},${cy})">
-  <circle r="34" fill="#E8E0C0"/>
-  <circle cx="14" cy="-10" r="28" fill="#0D1A2F"/>
+  <circle r="48" fill="#F0E8C8" opacity="0.10"/>
+  <circle r="38" fill="#F0E8C8" opacity="0.18"/>
+  <circle r="34" fill="#F0E8D0"/>
+  <circle cx="14" cy="-10" r="28" fill="#142840"/>
 </g>`
 }
 
@@ -426,11 +428,11 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
 
   if (isNight) {
     // Progressive night sky: blend between deep night and twilight based on dayFactor
-    const topColor    = lerpColor('#060D1C', '#1A2848', dayFactor * 2)
-    const bottomColor = lerpColor('#0F1E3A', '#2A3858', dayFactor * 2)
+    const topColor    = lerpColor('#0C1830', '#1E3050', dayFactor * 2)
+    const bottomColor = lerpColor('#142640', '#2A3858', dayFactor * 2)
     skyGrad    = gradient(topColor, bottomColor)
     skyContent = svgStars() + svgMoon(pos.moonX, pos.moonY)
-    land = svgUrbanScene({ city: '#060B16', beach: '#2A2418', foam: '#071018', oceanD: '#071018', oceanM: '#040C14', oceanN: '#030910', palm: '#03060C', tint: '#010610', tintOp: 0.60 })
+    land = svgUrbanScene({ city: '#141E30', beach: '#3A3428', foam: '#1A2838', oceanD: '#162038', oceanM: '#0E1828', oceanN: '#0A1420', palm: '#0C1420', tint: '#081020', tintOp: 0.30 })
 
   } else if (isDawn) {
     // Progressive dawn: blend from deep purple → warm orange based on dayFactor
