@@ -2,9 +2,10 @@ import { css } from 'lit'
 
 export default css`
 
-  /* ── Host: make the custom element a block so layout works ── */
+  /* ── Host: block + container query so children can use cqw units ── */
   :host {
     display: block;
+    container-type: inline-size;
   }
 
   /* ── Base text-color vars (white on any gradient) */
@@ -310,38 +311,13 @@ ha-card[data-theme="dusk-foggy"] {
   #lottieCanvasRain.is-visible   { opacity: 0.65; }
   #lottieCanvasWind.is-visible   { opacity: 0.48; }
 
-  /* ── Overflowing corner icon */
-  .bg-icon {
-    position: absolute;
-    top: -40px;
-    right: -24px;
-    width: 180px;
-    height: 180px;
-    pointer-events: none;
-    z-index: 3;
-  }
-
-  .bg-icon::before {
-    content: '';
-    position: absolute;
-    inset: 10px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(255,255,255,0.28) 0%,
-      rgba(255,255,255,0.08) 55%,
-      transparent 80%
-    );
-    filter: blur(12px);
-  }
-
+  /* ── Weather icon (inside card, responsive) */
   .icon-main {
-    position: relative;
-    display: block;
-    width: 130px;
-    height: 130px;
+    width: clamp(70px, 20cqw, 130px);
+    height: clamp(70px, 20cqw, 130px);
     object-fit: contain;
     filter: var(--icon-filter);
+    flex-shrink: 0;
   }
 
   /* ── Card body (all content, above lottie layer) */
@@ -355,17 +331,31 @@ ha-card[data-theme="dusk-foggy"] {
     gap: 16px;
   }
 
-  /* ── Hero: temp + condition/time row */
+  /* ── Hero: two-column (temp+condition left / icon+time right) */
   .hero {
-    padding-right: 110px;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 0 8px;
     margin-top: 8px;
   }
 
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
   .temp {
-    font-size: 5.5rem;
+    font-size: clamp(3.2rem, 23cqw, 6.5rem);
     font-weight: 900;
     color: var(--color-text-primary);
     line-height: 1;
@@ -373,27 +363,21 @@ ha-card[data-theme="dusk-foggy"] {
     margin: 0;
   }
 
-  .meta-row {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-top: 8px;
-  }
-
   .condition {
-    font-size: 1.7rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: var(--color-text-primary);
-    line-height: 1.1;
+    line-height: 1.2;
     letter-spacing: -0.01em;
   }
 
   .current-time {
-    font-size: 1.7rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--color-text-secondary);
     line-height: 1;
     letter-spacing: -0.02em;
+    text-align: center;
   }
 
   /* ── Forecast strips (v1 layout) */

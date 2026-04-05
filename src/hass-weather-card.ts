@@ -374,11 +374,6 @@ export class HassWeatherCard extends LitElement {
           <canvas id="lottieCanvasWind"></canvas>
         </div>
 
-        <!-- Corner bleed icon, z-index 3 -->
-        <div class="bg-icon">
-          ${safeRender(() => this.renderBgIcon())}
-        </div>
-
         <!-- All text content, z-index 2 -->
         <div class="card-body">
           ${safeRender(() => this.renderHero())}
@@ -417,12 +412,6 @@ export class HassWeatherCard extends LitElement {
 
   // ── Hero (temp + condition/time row) ────────────────────────────────────
 
-  private renderBgIcon (): TemplateResult {
-    const weather  = this.getWeather()
-    const icon     = this.toIcon(weather.state, 'line', false, this.getIconAnimationKind())
-    return html`<img class="icon-main" src=${icon} />`
-  }
-
   private renderHero (): TemplateResult {
     const weather        = this.getWeather()
     const temp           = this.config.show_decimal
@@ -432,6 +421,7 @@ export class HassWeatherCard extends LitElement {
     const weatherString  = this.localize(`weather.${weather.state}`)
     const localizedTemp  = temp !== null ? this.toConfiguredTempWithUnit(tempUnit, temp) : 'n/a'
     const subSize        = `${this.config.sub_font_size}rem`
+    const icon           = this.toIcon(weather.state, 'line', false, this.getIconAnimationKind())
 
     const isTimeHero = this.config.hero_display === 'time'
 
@@ -440,10 +430,13 @@ export class HassWeatherCard extends LitElement {
 
     return html`
       <div class="hero">
-        <p class="temp">${heroMain}</p>
-        <div class="meta-row" style="font-size:${subSize}">
-          <span class="condition">${weatherString}</span>
-          <span class="current-time">${metaSub}</span>
+        <div class="hero-left">
+          <p class="temp">${heroMain}</p>
+          <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+        </div>
+        <div class="hero-right">
+          <img class="icon-main" src=${icon} />
+          <span class="current-time" style="font-size:${subSize}">${metaSub}</span>
         </div>
       </div>
     `
