@@ -6,6 +6,7 @@ import terser from '@rollup/plugin-terser'
 import json from '@rollup/plugin-json'
 import image from '@rollup/plugin-image'
 import gzipPlugin from 'rollup-plugin-gzip'
+import copy from 'rollup-plugin-copy'
 
 export default [
   {
@@ -25,7 +26,12 @@ export default [
         babelHelpers: 'bundled'
       }),
       terser(),
-      gzipPlugin()
+      gzipPlugin(),
+      copy({
+        targets: [
+          { src: 'node_modules/@lottiefiles/dotlottie-web/dist/dotlottie-player.wasm', dest: 'dist' }
+        ]
+      })
     ],
     onwarn(warning, warn) {
       if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.message.includes('/luxon/')) {

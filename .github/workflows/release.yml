@@ -40,6 +40,15 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
+      - name: Upload WASM to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/dotlottie-player.wasm
+          asset_name: dotlottie-player.wasm
+          tag: ${{ github.ref }}
+          overwrite: true
+
       - name: Verify HACS compliance
         uses: hacs/action@main
         with:

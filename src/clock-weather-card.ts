@@ -452,7 +452,12 @@ export class ClockWeatherCard extends LitElement {
       time_zone: config.time_zone ?? undefined,
       show_decimal: config.show_decimal ?? false,
       apparent_sensor: config.apparent_sensor ?? undefined,
-      aqi_sensor: config.aqi_sensor ?? undefined
+      aqi_sensor: config.aqi_sensor ?? undefined,
+      hero_display: config.hero_display ?? 'temperature',
+      sub_font_size: config.sub_font_size ?? 1.7,
+      icon_size: config.icon_size ?? 90,
+      hero_gap: config.hero_gap ?? 8,
+      day_name_format: config.day_name_format ?? 'long'
     }
   }
 

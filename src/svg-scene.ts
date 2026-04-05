@@ -122,26 +122,29 @@ export function elevationToPeriod (elev: number | undefined, rising?: boolean): 
 /*   SKY ELEMENTS                                                         */
 /* ══════════════════════════════════════════════════════════════════════ */
 
-function svgSun (cx: number, cy: number, opacity: number): string {
+function svgSun (cx: number, cy: number, opacity: number, color?: string): string {
+  const rayCol = color ?? '#FFD000'
+  const fillCol = color ? lerpColor(color, '#FFFFFF', 0.35) : '#FFE840'
+  const strokeCol = color ?? '#FFCA00'
   return `
 <g transform="translate(${cx},${cy})" opacity="${opacity}">
-  <line x1="0"   y1="-54" x2="0"   y2="-76" stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="38"  y1="-38" x2="54"  y2="-54" stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="54"  y1="0"   x2="76"  y2="0"   stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="38"  y1="38"  x2="54"  y2="54"  stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="0"   y1="54"  x2="0"   y2="76"  stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="-38" y1="38"  x2="-54" y2="54"  stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="-54" y1="0"   x2="-76" y2="0"   stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="-38" y1="-38" x2="-54" y2="-54" stroke="#FFD000" stroke-width="6.5" stroke-linecap="round"/>
-  <line x1="21"  y1="-50" x2="29"  y2="-69" stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="50"  y1="-21" x2="69"  y2="-29" stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="50"  y1="21"  x2="69"  y2="29"  stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="21"  y1="50"  x2="29"  y2="69"  stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="-21" y1="50"  x2="-29" y2="69"  stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="-50" y1="21"  x2="-69" y2="29"  stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="-50" y1="-21" x2="-69" y2="-29" stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <line x1="-21" y1="-50" x2="-29" y2="-69" stroke="#FFD000" stroke-width="4"   stroke-linecap="round"/>
-  <circle r="46" fill="#FFE840" stroke="#FFCA00" stroke-width="1.5"/>
+  <line x1="0"   y1="-54" x2="0"   y2="-76" stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="38"  y1="-38" x2="54"  y2="-54" stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="54"  y1="0"   x2="76"  y2="0"   stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="38"  y1="38"  x2="54"  y2="54"  stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="0"   y1="54"  x2="0"   y2="76"  stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="-38" y1="38"  x2="-54" y2="54"  stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="-54" y1="0"   x2="-76" y2="0"   stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="-38" y1="-38" x2="-54" y2="-54" stroke="${rayCol}" stroke-width="6.5" stroke-linecap="round"/>
+  <line x1="21"  y1="-50" x2="29"  y2="-69" stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="50"  y1="-21" x2="69"  y2="-29" stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="50"  y1="21"  x2="69"  y2="29"  stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="21"  y1="50"  x2="29"  y2="69"  stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="-21" y1="50"  x2="-29" y2="69"  stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="-50" y1="21"  x2="-69" y2="29"  stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="-50" y1="-21" x2="-69" y2="-29" stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <line x1="-21" y1="-50" x2="-29" y2="-69" stroke="${rayCol}" stroke-width="4"   stroke-linecap="round"/>
+  <circle r="46" fill="${fillCol}" stroke="${strokeCol}" stroke-width="1.5"/>
 </g>`
 }
 
@@ -241,41 +244,36 @@ function svgHorizonGlow (color: string, cx: number, cy: number): string {
 /* ══════════════════════════════════════════════════════════════════════ */
 
 function drawPalmGrove (col: string): string {
+  // Trees ONLY on the LEFT side of the scene
   const p: string[] = []
 
-  p.push(`<rect x="0" y="574" width="390" height="86" fill="${col}"/>`)
-  p.push(`<ellipse cx="38"  cy="575" rx="66" ry="42" fill="${col}"/>`)
-  p.push(`<ellipse cx="147" cy="568" rx="90" ry="40" fill="${col}"/>`)
-  p.push(`<ellipse cx="262" cy="572" rx="76" ry="40" fill="${col}"/>`)
-  p.push(`<ellipse cx="368" cy="576" rx="60" ry="44" fill="${col}"/>`)
-
-  const plants: Array<[number, number, number]> = [
-    [22,554,-42],[78,547,28],[142,542,-18],[206,550,24],[268,543,-28],[322,548,22],[378,555,-16]
+  // Two palm trunks on the far left
+  const trunks: Array<[number, number, number, number]> = [
+    [45, 462, 50, 582],   // left palm
+    [95, 472, 100, 582],  // second palm, slightly right
   ]
-  for (const [cx,cy,a] of plants) {
-    p.push(`<ellipse cx="${cx}" cy="${cy}" rx="28" ry="52" fill="${col}" transform="rotate(${a},${cx},${cy})"/>`)
+  for (const [cx, cy, bx, by] of trunks) {
+    p.push(`<path d="M${bx-3},${by} Q${cx-5},${(cy+by)/2} ${cx},${cy} L${cx+6},${cy} Q${cx+4},${(cy+by)/2} ${bx+3},${by} Z" fill="${col}"/>`)
   }
 
-  const trees: Array<[number, number, number, number, number]> = [
-    [42,506,48,625,0.90],[118,522,124,632,0.76],[206,490,213,622,1.00],[290,510,296,630,0.82],[358,524,364,634,0.73]
+  // Fronds radiating from each crown
+  const crowns: Array<[number, number, number]> = [
+    [45, 454, 1.0],
+    [95, 464, 0.85],
   ]
-  for (const [cx,cy,rx,ry,s] of trees) {
-    const hw = Math.round(4 * s)
-    const my = Math.round((cy + ry) / 2)
-    p.push(`<path d="M${rx-hw},${ry} Q${cx-3},${my} ${cx-2},${cy+8} L${cx+hw+2},${cy+8} Q${cx+hw},${my} ${rx+hw},${ry} Z" fill="${col}"/>`)
-
+  for (const [cx, cy, s] of crowns) {
     const fronds: Array<[number, number, number]> = [
-      [-155,45,6],[-128,50,7],[-103,52,7],[-78,51,7],
-      [-52,50,7], [-26,48,7], [0,50,7],  [26,51,7],
-      [52,50,7],  [78,52,6],  [104,46,6],[130,42,6],
+      [-160, 48, 7], [-130, 52, 7], [-100, 54, 7], [-70, 52, 7],
+      [-40, 48, 7],  [-10, 46, 7],  [20, 48, 7],   [50, 50, 7],
+      [80, 52, 6],   [110, 48, 6],  [140, 44, 6],
     ]
-    for (const [a,len,wid] of fronds) {
+    for (const [a, len, wid] of fronds) {
       const rad = a * Math.PI / 180
       const fl  = +(len * s).toFixed(1)
       const fw  = +(wid * s).toFixed(1)
       const off = fl * 0.42
       const fcx = Math.round(cx + off * Math.cos(rad))
-      const fcy = Math.round(cy + 6 + off * Math.sin(rad))
+      const fcy = Math.round(cy + 4 + off * Math.sin(rad))
       p.push(`<ellipse cx="${fcx}" cy="${fcy}" rx="${fw}" ry="${fl}" fill="${col}" transform="rotate(${a},${fcx},${fcy})"/>`)
     }
   }
@@ -283,44 +281,73 @@ function drawPalmGrove (col: string): string {
   return p.join('')
 }
 
+function svgBuilding (col: string): string {
+  // ONE modern tropical building on the RIGHT side only
+  return `<path fill="${col}" d="
+    M 300,582 L 300,440 L 305,438 L 310,436 L 320,436 L 340,434 L 360,434 L 362,436
+    L 362,440 L 365,440 L 365,450 L 368,450 L 368,582 Z"/>
+  <rect x="315" y="450" width="14" height="20" rx="2" fill="rgba(180,220,255,0.18)"/>
+  <rect x="340" y="450" width="14" height="20" rx="2" fill="rgba(180,220,255,0.12)"/>
+  <rect x="315" y="480" width="14" height="20" rx="2" fill="rgba(180,220,255,0.15)"/>
+  <rect x="340" y="480" width="14" height="20" rx="2" fill="rgba(180,220,255,0.10)"/>
+  <rect x="315" y="510" width="14" height="20" rx="2" fill="rgba(180,220,255,0.12)"/>
+  <rect x="340" y="510" width="14" height="20" rx="2" fill="rgba(180,220,255,0.08)"/>`
+}
+
 function svgUrbanScene (o: UrbanSceneOpts): string {
-  const city   = o.city   ?? '#1A2840'
+  /*
+   * 4 horizontal bands stacked bottom to top (viewBox 0 0 390 660):
+   *   Sky:     y=  0..231  (top 35%)
+   *   Ocean:   y=231..363  (next 20%)
+   *   Beach:   y=363..462  (next 15%)
+   *   Ground:  y=462..660  (bottom 30%)
+   *
+   * Overlay elements:
+   *   Trees   — LEFT side only
+   *   Building — RIGHT side only, ONE modern tropical building
+   */
   const beach  = o.beach  ?? '#D4A840'
   const foam   = o.foam   ?? '#90D4E8'
   const oceanD = o.oceanD ?? '#28B0D8'
   const oceanM = o.oceanM ?? '#1470B8'
   const oceanN = o.oceanN ?? '#0A4A8C'
   const palm   = o.palm   ?? '#131B26'
+  const city   = o.city   ?? '#1A2840'
   const tint   = o.tint   ?? null
   const tintOp = o.tintOp ?? 0
 
-  const distOcean = `<rect x="0" y="285" width="390" height="75" fill="${oceanD}"/>`
-  const beachPoly = `<polygon points="62,360 390,285 390,352" fill="${beach}"/>`
-  const beachFoam = `<ellipse cx="222" cy="352" rx="172" ry="11" fill="${foam}" opacity="0.52"/><line x1="65" y1="358" x2="232" y2="318" stroke="${foam}" stroke-width="4" stroke-linecap="round" opacity="0.30"/>`
-  const cityPoly  = `<path fill="${city}" d="M 208,312 L 208,299 L 226,299 L 226,288 L 240,288 L 240,278 L 247,278 L 247,285 L 252,285 L 252,268 L 263,268 L 263,275 L 268,275 L 268,256 L 277,256 L 277,263 L 281,263 L 281,243 L 289,243 L 289,252 L 294,252 L 294,228 L 300,228 L 300,218 L 303,210 L 306,202 L 308,194 L 310,202 L 312,210 L 313,220 L 315,210 L 318,205 L 318,195 L 321,185 L 324,177 L 327,185 L 329,195 L 330,185 L 334,170 L 340,162 L 346,170 L 349,183 L 352,176 L 357,183 L 358,196 L 363,196 L 363,210 L 368,210 L 368,227 L 375,227 L 375,244 L 381,244 L 381,266 L 390,266 L 390,298 L 208,312 Z"/>`
-  const midOcean  = `<rect x="0" y="358" width="390" height="100" fill="${oceanM}"/>`
-  const wavesMid  = [
-    `<line x1="14"  y1="390" x2="74"  y2="386" stroke="rgba(255,255,255,0.48)" stroke-width="2.5" stroke-linecap="round"/>`,
-    `<line x1="92"  y1="406" x2="162" y2="401" stroke="rgba(255,255,255,0.36)" stroke-width="2"   stroke-linecap="round"/>`,
-    `<line x1="46"  y1="422" x2="102" y2="419" stroke="rgba(255,255,255,0.26)" stroke-width="1.8" stroke-linecap="round"/>`,
-    `<line x1="216" y1="378" x2="280" y2="374" stroke="rgba(255,255,255,0.26)" stroke-width="1.8" stroke-linecap="round"/>`,
-    `<line x1="308" y1="418" x2="378" y2="414" stroke="rgba(255,255,255,0.30)" stroke-width="2"   stroke-linecap="round"/>`,
-  ].join('')
-  const nearOcean = `<rect x="0" y="455" width="390" height="122" fill="${oceanN}"/>`
-  const wavesNear = [
-    `<line x1="28"  y1="474" x2="108" y2="470" stroke="rgba(255,255,255,0.40)" stroke-width="3"   stroke-linecap="round"/>`,
-    `<line x1="146" y1="491" x2="226" y2="487" stroke="rgba(255,255,255,0.28)" stroke-width="2.2" stroke-linecap="round"/>`,
-    `<line x1="260" y1="478" x2="354" y2="474" stroke="rgba(255,255,255,0.34)" stroke-width="2.5" stroke-linecap="round"/>`,
-    `<line x1="10"  y1="512" x2="82"  y2="508" stroke="rgba(255,255,255,0.20)" stroke-width="2"   stroke-linecap="round"/>`,
-    `<line x1="184" y1="530" x2="286" y2="525" stroke="rgba(255,255,255,0.24)" stroke-width="2"   stroke-linecap="round"/>`,
+  // Ground band (bottom 30%): y=462..660
+  const ground = `<rect x="0" y="462" width="390" height="198" fill="${palm}"/>`
+
+  // Beach band (15%): y=363..462
+  const beachBand = `<rect x="0" y="363" width="390" height="99" fill="${beach}"/>`
+  const beachFoam = `<line x1="0" y1="365" x2="390" y2="365" stroke="${foam}" stroke-width="4" opacity="0.55"/>`
+
+  // Ocean bands (20%): y=231..363, split into near/far
+  const oceanFar  = `<rect x="0" y="231" width="390" height="66" fill="${oceanD}"/>`
+  const oceanMid  = `<rect x="0" y="297" width="390" height="33" fill="${oceanM}"/>`
+  const oceanNear = `<rect x="0" y="330" width="390" height="33" fill="${oceanN}"/>`
+
+  // Wave lines
+  const waves = [
+    `<line x1="14"  y1="260" x2="100" y2="257" stroke="rgba(255,255,255,0.40)" stroke-width="2.5" stroke-linecap="round"/>`,
+    `<line x1="180" y1="255" x2="290" y2="252" stroke="rgba(255,255,255,0.28)" stroke-width="2"   stroke-linecap="round"/>`,
+    `<line x1="50"  y1="310" x2="150" y2="308" stroke="rgba(255,255,255,0.32)" stroke-width="2"   stroke-linecap="round"/>`,
+    `<line x1="220" y1="315" x2="370" y2="312" stroke="rgba(255,255,255,0.24)" stroke-width="2"   stroke-linecap="round"/>`,
+    `<line x1="30"  y1="345" x2="160" y2="342" stroke="rgba(255,255,255,0.36)" stroke-width="2.5" stroke-linecap="round"/>`,
+    `<line x1="250" y1="350" x2="380" y2="348" stroke="rgba(255,255,255,0.22)" stroke-width="2"   stroke-linecap="round"/>`,
   ].join('')
 
-  const palms   = drawPalmGrove(palm)
+  // Overlay: trees LEFT, building RIGHT
+  const palms    = drawPalmGrove(palm)
+  const building = svgBuilding(city)
+
+  // Optional tint overlay on lower bands
   const overlay = tint
-    ? `<rect x="0" y="285" width="390" height="375" fill="${tint}" opacity="${tintOp}"/>`
+    ? `<rect x="0" y="231" width="390" height="429" fill="${tint}" opacity="${tintOp}"/>`
     : ''
 
-  return distOcean + beachPoly + beachFoam + cityPoly + midOcean + wavesMid + nearOcean + wavesNear + palms + overlay
+  return ground + beachBand + beachFoam + oceanFar + oceanMid + oceanNear + waves + palms + building + overlay
 }
 
 /* ══════════════════════════════════════════════════════════════════════ */
@@ -331,12 +358,13 @@ function getSkyBodyPos (period: string, opts: SkyOpts = {}): SkyBodyPos {
   /* ── HA sun entity integration ──────────────────────────────────
      When opts.sunElevation is provided (from sun.sun entity), use
      it to position the sun precisely instead of time-based snapping.
+     Horizon line is at y=231 (top of ocean band).
   ─────────────────────────────────────────────────────────────── */
   if (typeof opts.sunElevation === 'number') {
     const az   = typeof opts.sunAzimuth === 'number' ? opts.sunAzimuth : 180
     const tSun = Math.max(0, Math.min(1, (az - 90) / 180))
     const sunX = Math.round(48 + tSun * 298)
-    const sunY = Math.round(285 - Math.max(0, opts.sunElevation) / 90 * 220)
+    const sunY = Math.round(231 - Math.max(0, opts.sunElevation) / 90 * 200)
     return { sunX, sunY, moonX: -100, moonY: -100 }
   }
 
@@ -345,19 +373,19 @@ function getSkyBodyPos (period: string, opts: SkyOpts = {}): SkyBodyPos {
 
   const tSun   = Math.max(0, Math.min(1, (hr - 6) / 13))
   const rSunX  = Math.round(48 + tSun * 298)
-  const rSunY  = Math.round(285 - Math.sin(tSun * Math.PI) * 220)
+  const rSunY  = Math.round(231 - Math.sin(tSun * Math.PI) * 200)
 
   const tMoon  = Math.max(0, Math.min(1,
     hr >= 20 ? (hr - 20) / 12 : (hr < 8 ? (hr + 4) / 12 : 1)))
   const rMoonX = Math.round(380 - tMoon * 298)
-  const rMoonY = Math.round(285 - Math.sin(tMoon * Math.PI) * 220)
+  const rMoonY = Math.round(231 - Math.sin(tMoon * Math.PI) * 200)
 
   const snapped: Record<string, SkyBodyPos> = {
     night:     { sunX: -100, sunY: -100, moonX: rMoonX, moonY: rMoonY },
-    dawn:      { sunX:  52,  sunY:  285, moonX: 348,    moonY: 110    },
-    morning:   { sunX: 195,  sunY:  205, moonX: -100,   moonY: -100   },
-    afternoon: { sunX: 245,  sunY:   65, moonX: -100,   moonY: -100   },
-    dusk:      { sunX: 342,  sunY:  285, moonX: 108,    moonY: 128    },
+    dawn:      { sunX:  52,  sunY:  231, moonX: 348,    moonY: 80     },
+    morning:   { sunX: 195,  sunY:  155, moonX: -100,   moonY: -100   },
+    afternoon: { sunX: 245,  sunY:   45, moonX: -100,   moonY: -100   },
+    dusk:      { sunX: 342,  sunY:  231, moonX: 108,    moonY: 100    },
   }
   return snapped[period] ?? { sunX: rSunX, sunY: rSunY, moonX: rMoonX, moonY: rMoonY }
 }
@@ -442,7 +470,8 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
     const mid2 = lerpColor('#804020', '#E07416', df)
     const bot = lerpColor('#C06020', '#F8BC3C', df)
     skyGrad    = gradientStops([[0, top], [32, mid1], [66, mid2], [100, bot]])
-    skyContent = svgSun(pos.sunX, pos.sunY, 0.65 + df * 0.27) + svgHorizonGlow('#FF8C1C', pos.sunX, pos.sunY)
+    const dawnSunCol = lerpColor('#FF4500', '#FFD000', df)
+    skyContent = svgSun(pos.sunX, pos.sunY, 0.65 + df * 0.27, dawnSunCol) + svgHorizonGlow('#FF8C1C', pos.sunX, pos.sunY)
     land = svgUrbanScene({ city: '#1A2240', beach: '#C08840', foam: '#E09040', oceanD: '#2065A0', oceanM: '#153870', oceanN: '#0D2448', palm: '#13171E' })
 
   } else if (isDusk) {
@@ -452,7 +481,8 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
     const mid2 = lerpColor('#905020', '#EE8418', df)
     const bot = lerpColor('#C87020', '#F8C23C', df)
     skyGrad    = gradientStops([[0, top], [32, mid1], [66, mid2], [100, bot]])
-    skyContent = svgSun(pos.sunX, pos.sunY, 0.55 + df * 0.33) + svgHorizonGlow('#FF6C1C', pos.sunX, pos.sunY)
+    const duskSunCol = lerpColor('#FFD000', '#CC2200', 1 - df)
+    skyContent = svgSun(pos.sunX, pos.sunY, 0.55 + df * 0.33, duskSunCol) + svgHorizonGlow('#FF6C1C', pos.sunX, pos.sunY)
     land = svgUrbanScene({ city: '#181830', beach: '#A87028', foam: '#CC7235', oceanD: '#1D4870', oceanM: '#133060', oceanN: '#0C1E40', palm: '#11101A' })
 
   } else if (isStormy) {
@@ -518,10 +548,10 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
     <stop offset="100%" stop-color="rgba(0,0,0,0.48)" />
   </linearGradient>
 </defs>
-<rect width="390" height="660" fill="url(#gSky)"/>
+<rect width="390" height="231" fill="url(#gSky)"/>
 ${skyContent}
 ${land}
 ${fogOverlay}
-<rect y="370" width="390" height="290" fill="url(#gScrim)"/>
+<rect y="430" width="390" height="230" fill="url(#gScrim)"/>
 </svg>`
 }

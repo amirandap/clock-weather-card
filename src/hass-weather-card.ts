@@ -37,6 +37,18 @@ import { DotLottie } from '@lottiefiles/dotlottie-web'
 import { CLOUDS_LOTTIE, RAIN_LOTTIE, WIND_LOTTIE } from './lottie-assets'
 import { buildBackground, type SkyOpts, elevationToPeriod } from './svg-scene'
 
+// Point DotLottie at the co-located WASM file so it doesn't fetch from CDN
+// In HACS the JS lives at /hacsfiles/clock-weather-card/hass-weather-card.js
+// so the WASM will be at /hacsfiles/clock-weather-card/dotlottie-player.wasm
+try {
+  const scriptUrl = (document.currentScript as HTMLScriptElement | null)?.src
+    ?? new URL(import.meta.url).href
+  const wasmUrl = new URL('dotlottie-player.wasm', scriptUrl).href
+  DotLottie.setWasmUrl(wasmUrl)
+} catch (_e) {
+  // Fallback: let DotLottie try the CDN
+}
+
 console.info(
   `%c  HASS-WEATHER-CARD \n%c Version: ${version}`,
   'color: orange; font-weight: bold; background: black',
@@ -422,6 +434,8 @@ export class HassWeatherCard extends LitElement {
     const localizedTemp  = temp !== null ? this.toConfiguredTempWithUnit(tempUnit, temp) : 'n/a'
     const subSize        = `${this.config.sub_font_size}rem`
     const icon           = this.toIcon(weather.state, 'line', false, this.getIconAnimationKind())
+    const iconPx         = `${this.config.icon_size}px`
+    const gapPx          = `${this.config.hero_gap}px`
 
     const isTimeHero = this.config.hero_display === 'time'
 
@@ -429,13 +443,13 @@ export class HassWeatherCard extends LitElement {
     const metaSub  = isTimeHero ? localizedTemp : this.time()
 
     return html`
-      <div class="hero">
+      <div class="hero" style="gap: 0 ${gapPx}">
         <div class="hero-left">
           <p class="temp">${heroMain}</p>
           <span class="condition" style="font-size:${subSize}">${weatherString}</span>
         </div>
         <div class="hero-right">
-          <img class="icon-main" src=${icon} />
+          <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
           <span class="current-time" style="font-size:${subSize}">${metaSub}</span>
         </div>
       </div>
@@ -465,12 +479,15 @@ export class HassWeatherCard extends LitElement {
     const rows = this.config.forecast_rows ?? 4
     const items = this.mergeForecasts(rows, false)
     const entityTempUnit = this.getWeather().attributes.temperature_unit
+    const isLong = this.config.day_name_format === 'long'
     return html`
       <div class="forecast-daily" style="--daily-cols: ${items.length}">
         ${items.map(f => safeRender(() => {
           const icon = this.toIcon(f.condition, 'line', true, 'static')
           const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
-          const day  = this.localize(`day.${f.datetime.weekday}`)
+          const day  = isLong
+            ? f.datetime.setLocale(this.getLocale()).toFormat('cccc')
+            : this.localize(`day.${f.datetime.weekday}`)
           return html`
             <div class="forecast-slot">
               <img class="forecast-slot__icon" src=${icon} alt="" />
@@ -507,7 +524,7 @@ export class HassWeatherCard extends LitElement {
       forecast_rows: config.forecast_rows ?? 5,
       hourly_forecast: config.hourly_forecast ?? false,
       animated_icon: config.animated_icon ?? true,
-      time_format: config.time_format?.toString() as '12' | '24' | undefined,
+      time_format: config.time_format?.toString() as '12' | '24' | undefined ?? '12',
       time_pattern: config.time_pattern ?? undefined,
       show_humidity: config.show_humidity ?? false,
       hide_forecast_section: config.hide_forecast_section ?? false,
@@ -521,7 +538,10 @@ export class HassWeatherCard extends LitElement {
       apparent_sensor: config.apparent_sensor ?? undefined,
       aqi_sensor: config.aqi_sensor ?? undefined,
       hero_display: config.hero_display ?? 'temperature',
-      sub_font_size: config.sub_font_size ?? 1.7
+      sub_font_size: config.sub_font_size ?? 1.7,
+      icon_size: config.icon_size ?? 90,
+      hero_gap: config.hero_gap ?? 8,
+      day_name_format: config.day_name_format ?? 'long'
     }
   }
 

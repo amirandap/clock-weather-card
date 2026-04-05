@@ -38,6 +38,12 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   hero_display?: 'temperature' | 'time'
   /** Sub-text font size in rem (default: 1.7) */
   sub_font_size?: number
+  /** Hero icon size in px (default: 90) */
+  icon_size?: number
+  /** Gap between hero columns in px (default: 8) */
+  hero_gap?: number
+  /** Day name format: 'long' (full name) or 'short' (abbreviated) — default: 'long' */
+  day_name_format?: 'long' | 'short'
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -67,6 +73,9 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   aqi_sensor?: string
   hero_display: 'temperature' | 'time'
   sub_font_size: number
+  icon_size: number
+  hero_gap: number
+  day_name_format: 'long' | 'short'
 }
 
 export const enum WeatherEntityFeature {
