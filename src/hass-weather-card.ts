@@ -36,6 +36,7 @@ import { DateTime } from 'luxon'
 import { DotLottie } from '@lottiefiles/dotlottie-web'
 import { CLOUDS_LOTTIE, RAIN_LOTTIE, WIND_LOTTIE } from './lottie-assets'
 import { buildBackground, type SkyOpts, elevationToPeriod } from './svg-scene'
+import './editor'
 
 // Point DotLottie at the co-located WASM file so it doesn't fetch from CDN
 // In HACS the JS lives at /hacsfiles/clock-weather-card/hass-weather-card.js
@@ -129,6 +130,10 @@ export class HassWeatherCard extends LitElement {
     const msToNextSecond = (1000 - this.currentDate.millisecond)
     setTimeout(() => setInterval(() => { this.currentDate = DateTime.now() }, 1000), msToNextSecond)
     setTimeout(() => { this.currentDate = DateTime.now() }, msToNextSecond)
+  }
+
+  public static async getConfigElement (): Promise<HTMLElement> {
+    return document.createElement('hass-weather-card-editor')
   }
 
   public static getStubConfig (_hass: HomeAssistant, entities: string[], entitiesFallback: string[]): Record<string, unknown> {
