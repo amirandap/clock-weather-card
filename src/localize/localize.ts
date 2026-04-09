@@ -86,20 +86,31 @@ const languages: any = {
 }
 
 export function localize (key: string, locale: string): string {
-  let translated: string
   const lang = locale
     .replace(/['"]+/g, '')
     .replace('-', '_')
     .replace('_', '')
     .toLowerCase()
 
+  const source = languages[lang] ?? languages.en
+  if (!source) return key
+
   try {
-    translated = key.split('.').reduce((o, i) => o[i], languages[lang])
-  } catch (e) {
-    translated = key.split('.').reduce((o, i) => o[i], languages.en)
+    const translated = key.split('.').reduce((o, i) => o?.[i], source)
+    if (translated !== undefined && translated !== null) return translated
+  } catch (_e) {
+    // key path traversal failed
   }
 
-  if (translated === undefined) translated = key.split('.').reduce((o, i) => o[i], languages.en)
+  // Fall back to English if we used a non-English source
+  if (lang !== 'en' && languages.en) {
+    try {
+      const fallback = key.split('.').reduce((o, i) => o?.[i], languages.en)
+      if (fallback !== undefined && fallback !== null) return fallback
+    } catch (_e) {
+      // English fallback also failed
+    }
+  }
 
-  return translated
+  return key
 }

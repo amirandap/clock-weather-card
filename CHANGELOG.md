@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.15.0] (2025-07-24)
+
+### Bug Fixes
+
+* **setInterval memory leak** (both cards): Moved `setInterval` from constructor to `connectedCallback()` and added `clearInterval` in `disconnectedCallback()`. Previously, intervals were never cleared, leaking on every DOM attach/detach cycle.
+* **localize crash**: Rewrote `localize()` with optional chaining for key traversal and proper fallback chain (`lang → en → raw key`). Previously crashed on unsupported locales because `languages[lang]` was `undefined`.
+* **forecast callback undefined**: Guarded forecast subscription callbacks with `event.forecast ?? []` in both cards. `WeatherForecastEvent.forecast` is optional and could be `undefined`.
+* **svg-scene NaN propagation**: `elevationToDayFactor()` now returns `0.85` for non-finite elevation values. `parseHex()` now pads short hex strings and falls back to `0` for NaN parse results.
+* **action-handler touches crash**: Added optional chaining (`touches?.[0]?.pageX ?? 0`) to prevent crash when `touches` array is empty on certain touch events.
+* **partial subscription orphan**: Wrapped hourly forecast subscription in its own try-catch so a failure doesn't propagate to the outer catch and orphan the already-active daily subscription.
+
 ## [2.14.1] (2026-04-09)
 
 ### Bug Fixes

@@ -69,13 +69,11 @@ export class ClockWeatherCard extends LitElement {
   @state() private error?: TemplateResult
   private forecastSubscriber?: () => Promise<void>
   private forecastSubscriberLock = false
+  private currentDateInterval?: ReturnType<typeof setInterval>
 
   constructor () {
     super()
     this.currentDate = DateTime.now()
-    const msToNextSecond = (1000 - this.currentDate.millisecond)
-    setTimeout(() => setInterval(() => { this.currentDate = DateTime.now() }, 1000), msToNextSecond)
-    setTimeout(() => { this.currentDate = DateTime.now() }, msToNextSecond)
   }
 
   public static getStubConfig (_hass: HomeAssistant, entities: string[], entitiesFallback: string[]): Record<string, unknown> {
@@ -192,6 +190,14 @@ export class ClockWeatherCard extends LitElement {
 
   public connectedCallback (): void {
     super.connectedCallback()
+    if (!this.currentDateInterval) {
+      this.currentDate = DateTime.now()
+      const msToNextSecond = 1000 - this.currentDate.millisecond
+      setTimeout(() => {
+        this.currentDate = DateTime.now()
+        this.currentDateInterval = setInterval(() => { this.currentDate = DateTime.now() }, 1000)
+      }, msToNextSecond)
+    }
     if (this.hasUpdated) {
       void this.subscribeForecastEvents()
     }
@@ -199,6 +205,10 @@ export class ClockWeatherCard extends LitElement {
 
   public disconnectedCallback (): void {
     super.disconnectedCallback()
+    if (this.currentDateInterval) {
+      clearInterval(this.currentDateInterval)
+      this.currentDateInterval = undefined
+    }
     void this.unsubscribeForecastEvents()
   }
 
@@ -718,7 +728,7 @@ export class ClockWeatherCard extends LitElement {
     }
     try {
       const callback = (event: WeatherForecastEvent): void => {
-        this.forecasts = event.forecast
+        this.forecasts = event.forecast ?? []
       }
       const options = { resubscribe: false }
       const message = {

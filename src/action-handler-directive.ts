@@ -83,8 +83,8 @@ class ActionHandler extends HTMLElement implements ActionHandler {
 
     const start = (ev: Event): void => {
       this.held = false
-      const x = (ev as MouseEvent).pageX ?? (ev as TouchEvent).touches[0].pageX
-      const y = (ev as MouseEvent).pageY ?? (ev as TouchEvent).touches[0].pageY
+      const x = (ev as MouseEvent).pageX ?? (ev as TouchEvent).touches?.[0]?.pageX ?? 0
+      const y = (ev as MouseEvent).pageY ?? (ev as TouchEvent).touches?.[0]?.pageY ?? 0
 
       this.timer = window.setTimeout(() => {
         this.startAnimation(x, y)

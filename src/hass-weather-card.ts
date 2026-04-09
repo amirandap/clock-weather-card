@@ -130,13 +130,11 @@ export class HassWeatherCard extends LitElement {
   private _lottieCloud?: DotLottie
   private _lottieRain?: DotLottie
   private _lottieWind?: DotLottie
+  private currentDateInterval?: ReturnType<typeof setInterval>
 
   constructor () {
     super()
     this.currentDate = DateTime.now()
-    const msToNextSecond = (1000 - this.currentDate.millisecond)
-    setTimeout(() => setInterval(() => { this.currentDate = DateTime.now() }, 1000), msToNextSecond)
-    setTimeout(() => { this.currentDate = DateTime.now() }, msToNextSecond)
   }
 
   public static async getConfigElement (): Promise<HTMLElement> {
@@ -420,6 +418,14 @@ export class HassWeatherCard extends LitElement {
 
   public connectedCallback (): void {
     super.connectedCallback()
+    if (!this.currentDateInterval) {
+      this.currentDate = DateTime.now()
+      const msToNextSecond = 1000 - this.currentDate.millisecond
+      setTimeout(() => {
+        this.currentDate = DateTime.now()
+        this.currentDateInterval = setInterval(() => { this.currentDate = DateTime.now() }, 1000)
+      }, msToNextSecond)
+    }
     if (this.hasUpdated) {
       void this.subscribeForecastEvents()
     }
@@ -427,6 +433,10 @@ export class HassWeatherCard extends LitElement {
 
   public disconnectedCallback (): void {
     super.disconnectedCallback()
+    if (this.currentDateInterval) {
+      clearInterval(this.currentDateInterval)
+      this.currentDateInterval = undefined
+    }
     void this.unsubscribeForecastEvents()
     this._lottieCloud?.destroy()
     this._lottieRain?.destroy()
@@ -758,7 +768,7 @@ export class HassWeatherCard extends LitElement {
     const primaryType: 'daily' | 'hourly' = supportsDaily ? 'daily' : 'hourly'
     const options = { resubscribe: false }
     try {
-      const dailyCallback = (event: WeatherForecastEvent): void => { this.forecasts = event.forecast }
+      const dailyCallback = (event: WeatherForecastEvent): void => { this.forecasts = event.forecast ?? [] }
       this.forecastSubscriber = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(
         dailyCallback,
         { type: 'weather/subscribe_forecast', forecast_type: primaryType, entity_id: this.config.entity },
@@ -766,12 +776,16 @@ export class HassWeatherCard extends LitElement {
       )
       // Subscribe to hourly separately when entity supports both
       if (supportsDaily && supportsHourly) {
-        const hourlyCallback = (event: WeatherForecastEvent): void => { this.hourlyForecasts = event.forecast }
-        this.forecastSubscriberHourly = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(
-          hourlyCallback,
-          { type: 'weather/subscribe_forecast', forecast_type: 'hourly', entity_id: this.config.entity },
-          options
-        )
+        try {
+          const hourlyCallback = (event: WeatherForecastEvent): void => { this.hourlyForecasts = event.forecast ?? [] }
+          this.forecastSubscriberHourly = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(
+            hourlyCallback,
+            { type: 'weather/subscribe_forecast', forecast_type: 'hourly', entity_id: this.config.entity },
+            options
+          )
+        } catch (e: unknown) {
+          console.error('hass-weather-card - Error subscribing to hourly forecast (daily still active)', e)
+        }
       }
     } catch (e: unknown) {
       console.error('hass-weather-card - Error subscribing to weather forecast', e)

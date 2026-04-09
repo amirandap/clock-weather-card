@@ -59,8 +59,8 @@ interface UrbanSceneOpts {
 
 /* ── Color interpolation helpers ──────────────────────────────────────── */
 function parseHex (hex: string): [number, number, number] {
-  const h = hex.replace('#', '')
-  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]
+  const h = hex.replace('#', '').padEnd(6, '0')
+  return [parseInt(h.slice(0,2),16) || 0, parseInt(h.slice(2,4),16) || 0, parseInt(h.slice(4,6),16) || 0]
 }
 
 function toHex (r: number, g: number, b: number): string {
@@ -93,6 +93,7 @@ function multiLerp (stops: Array<[number, string]>, t: number): string {
  *   +60° or above → 1 (full day)
  */
 function elevationToDayFactor (elev: number): number {
+  if (!isFinite(elev)) return 0.85
   if (elev <= -18) return 0
   if (elev >= 60)  return 1
   if (elev <= 0)   return 0.35 * ((elev + 18) / 18)       // -18..0 → 0..0.35
