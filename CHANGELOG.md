@@ -1,6 +1,23 @@
 # Changelog
 
-## [2.9.5] (2026-04-XX)
+## [2.14.0] (2026-04-09)
+
+### Bug Fixes
+
+* **render**: `this.error` set by `createError()` is now cleared in `render()` when the entity becomes available in `hass.states`, preventing a permanently-stuck error card after HA's delayed state hydration.
+* **getStubConfig**: Fixed `??` operator precedence bug — the entity fallback list was never searched because `startsWith()` always returns a boolean (never `null`/`undefined`). Both cards now correctly fall back to `entitiesFallback`.
+* **toIcon**: Unknown/custom weather states no longer produce `<img src="undefined">` — the code now falls back to the `cloudy` icon, then to an empty string.
+* **mergeForecasts**: Daily forecast grouping key was `d.getDate()` (day-of-month only), causing cross-month date collisions. Now uses `year-month-day` key.
+* **parseDateTime**: `DateTime.fromJSDate(new Date(invalid))` returned an invalid `DateTime` with `.toMillis() === NaN`, corrupting forecast sort order. Added `isValid` check; falls back to `DateTime.now()` with a console error.
+* **getLocale / getConfiguredTemperatureUnit**: Added optional chaining (`?.`) throughout to prevent hard crashes when `hass.locale` or `hass.config.unit_system` is not yet populated during early render.
+* **utils – min/max**: `Math.min(...[])` and `Math.max(...[])` return `±Infinity` for empty arrays. Both functions now return `0` for empty input.
+* **utils – extractMostOccuring**: Calling with an empty array returned `undefined` typed as `T`. Now throws a descriptive `Error`.
+* **safeRender**: Silently swallowed errors with `html\`\`` (invisible). Now renders a visible inline `⚠ <message>` so render errors surface to the user.
+* **subscribeForecastEvents** (clock card): `throw this.createError(...)` inside an async `void`-called function produced an unhandled promise rejection. Changed to `this.createError(...)` + `return` — error card is still displayed, without the phantom throw.
+* **renderForecastItem** (clock card): Was calling `this.getWeather()` again inside each item render despite `temperatureUnit` already being passed as an argument.
+* **lint**: Resolved all pre-existing ESLint alignment/style violations (`key-spacing`, `no-multi-spaces`, `quote-props`, `object-property-newline`, `comma-dangle`, `operator-linebreak`, `dot-notation`, `prefer-nullish-coalescing`).
+
+
 
 ### Features
 

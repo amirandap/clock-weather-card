@@ -1,8 +1,10 @@
 export function max (n: number[]): number {
+  if (n.length === 0) return 0
   return Math.max(...n)
 }
 
 export function min (n: number[]): number {
+  if (n.length === 0) return 0
   return Math.min(...n)
 }
 
@@ -36,6 +38,7 @@ export function roundIfNotNull (number: number | null): number | null {
 }
 // from https://stackoverflow.com/a/1053865
 export function extractMostOccuring<T extends string | number | symbol> (elements: T[]): T {
+  if (elements.length === 0) throw new Error('extractMostOccuring: received empty array')
   const modeMap = new Map<T, number>()
   let maxEl = elements[0]
   let maxCount = 1

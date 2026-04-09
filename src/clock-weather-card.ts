@@ -79,7 +79,7 @@ export class ClockWeatherCard extends LitElement {
   }
 
   public static getStubConfig (_hass: HomeAssistant, entities: string[], entitiesFallback: string[]): Record<string, unknown> {
-    const entity = entities.find(e => e.startsWith('weather.') ?? entitiesFallback.find(() => true))
+    const entity = entities.find(e => e.startsWith('weather.')) ?? entitiesFallback.find(e => e.startsWith('weather.'))
     if (entity) {
       return { entity }
     }
@@ -148,7 +148,8 @@ export class ClockWeatherCard extends LitElement {
   // https://lit.dev/docs/components/rendering/
   protected render (): TemplateResult {
     if (this.error) {
-      return this.error
+      if (this.hass && this.config && this.hass.states[this.config.entity]) this.error = undefined
+      else return this.error
     }
 
     const showToday = !this.config.hide_today_section
@@ -276,7 +277,7 @@ export class ClockWeatherCard extends LitElement {
   private renderForecastItem (forecast: MergedWeatherForecast, minTemp: number, maxTemp: number, currentTemp: number | null, temperatureUnit: TemperatureUnit, hourly: boolean, displayText: string, maxColOneChars: number): TemplateResult {
     const weatherState = forecast.condition === 'pouring' ? 'raindrops' : forecast.condition === 'rainy' ? 'raindrop' : forecast.condition
     const weatherIcon = this.toIcon(weatherState, 'fill', true, 'static')
-    const tempUnit = this.getWeather().attributes.temperature_unit
+    const tempUnit = temperatureUnit
     const isNow = hourly ? DateTime.now().hour === forecast.datetime.hour : DateTime.now().day === forecast.datetime.day
     const minTempDay = Math.round(isNow && currentTemp !== null ? Math.min(currentTemp, forecast.templow) : forecast.templow)
     const maxTempDay = Math.round(isNow && currentTemp !== null ? Math.max(currentTemp, forecast.temperature) : forecast.temperature)
@@ -464,8 +465,8 @@ export class ClockWeatherCard extends LitElement {
   private toIcon (weatherState: string, type: 'fill' | 'line', forceDay: boolean, kind: 'static' | 'animated'): string {
     const daytime = forceDay ? 'day' : this.getSun()?.state === 'below_horizon' ? 'night' : 'day'
     const iconMap = kind === 'animated' ? animatedIcons : staticIcons
-    const icon = iconMap[type][weatherState]
-    return icon?.[daytime] || icon
+    const icon = iconMap[type][weatherState] ?? iconMap[type]['cloudy']
+    return icon?.[daytime] ?? icon ?? ''
   }
 
   private getWeather (): Weather {
@@ -552,7 +553,7 @@ export class ClockWeatherCard extends LitElement {
   }
 
   private getLocale (): string {
-    return this.config.locale ?? this.hass.locale.language ?? 'en-GB'
+    return this.config.locale ?? this.hass?.locale?.language ?? 'en-GB'
   }
 
   private date (): string {
@@ -592,7 +593,7 @@ export class ClockWeatherCard extends LitElement {
   }
 
   private getConfiguredTemperatureUnit (): TemperatureUnit {
-    return this.hass.config.unit_system.temperature as TemperatureUnit
+    return (this.hass?.config?.unit_system?.temperature ?? '°C') as TemperatureUnit
   }
 
   private toConfiguredTempWithUnit (unit: TemperatureUnit, temp: number): string {
@@ -634,7 +635,7 @@ export class ClockWeatherCard extends LitElement {
     const forecasts = this.isLegacyWeather() ? this.getWeather().attributes.forecast ?? [] : this.forecasts ?? []
     const agg = forecasts.reduce<Record<number, WeatherForecast[]>>((forecasts, forecast) => {
       const d = new Date(forecast.datetime)
-      const unit = hourly ? `${d.getMonth()}-${d.getDate()}-${+d.getHours()}` : d.getDate()
+      const unit = hourly ? `${d.getMonth()}-${d.getDate()}-${+d.getHours()}` : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
       forecasts[unit] = forecasts[unit] || []
       forecasts[unit].push(forecast)
       return forecasts
@@ -708,9 +709,10 @@ export class ClockWeatherCard extends LitElement {
 
     const forecastType = this.determineForecastType()
     if (forecastType === 'hourly_not_supported') {
+      this.createError(`Weather entity [${this.config.entity}] does not support hourly forecast.`)
       this.forecastSubscriber = async () => {}
       this.forecastSubscriberLock = false
-      throw this.createError(`Weather entity [${this.config.entity}] does not support hourly forecast.`)
+      return
     }
     try {
       const callback = (event: WeatherForecastEvent): void => {
@@ -791,6 +793,11 @@ export class ClockWeatherCard extends LitElement {
     if (fromIso.isValid) {
       return fromIso
     }
-    return DateTime.fromJSDate(new Date(date))
+    const fromJs = DateTime.fromJSDate(new Date(date))
+    if (fromJs.isValid) {
+      return fromJs
+    }
+    console.error(`clock-weather-card - Could not parse datetime: "${date}"`)
+    return DateTime.now()
   }
 }

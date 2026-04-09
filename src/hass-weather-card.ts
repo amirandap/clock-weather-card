@@ -42,8 +42,8 @@ import './editor'
 // In HACS the JS lives at /hacsfiles/clock-weather-card/hass-weather-card.js
 // so the WASM will be at /hacsfiles/clock-weather-card/dotlottie-player.wasm
 try {
-  const scriptUrl = (document.currentScript as HTMLScriptElement | null)?.src
-    ?? new URL(import.meta.url).href
+  const scriptUrl = (document.currentScript as HTMLScriptElement | null)?.src ??
+    new URL(import.meta.url).href
   const wasmUrl = new URL('dotlottie-player.wasm', scriptUrl).href
   DotLottie.setWasmUrl(wasmUrl)
 } catch (_e) {
@@ -66,47 +66,54 @@ console.info(
 
 // ── Condition → CSS slug mapping (15 HA conditions → 8 slugs) ──────────
 const CONDITION_GROUP: Record<string, string> = {
-  'clear-night':     'sunny',
-  'sunny':           'sunny',
-  'partlycloudy':    'partly-cloudy',
-  'cloudy':          'cloudy',
-  'windy':           'windy',
-  'windy-variant':   'windy',
-  'fog':             'foggy',
-  'rainy':           'rainy',
+  'clear-night': 'sunny',
+  sunny: 'sunny',
+  partlycloudy: 'partly-cloudy',
+  cloudy: 'cloudy',
+  windy: 'windy',
+  'windy-variant': 'windy',
+  fog: 'foggy',
+  rainy: 'rainy',
   'lightning-rainy': 'rainy',
-  'hail':            'rainy',
-  'snowy-rainy':     'rainy',
-  'pouring':         'pouring',
-  'lightning':       'stormy',
-  'snowy':           'snowy',
-  'exceptional':     'cloudy',
+  hail: 'rainy',
+  'snowy-rainy': 'rainy',
+  pouring: 'pouring',
+  lightning: 'stormy',
+  snowy: 'snowy',
+  exceptional: 'cloudy'
 }
 
 // Condition groups that trigger cloud / rain / wind lottie layers
 const LOTTIE_CLOUDS_GROUPS = new Set(['sunny', 'partly-cloudy', 'cloudy', 'foggy', 'snowy', 'windy'])
-const LOTTIE_RAIN_GROUPS   = new Set(['rainy', 'pouring', 'stormy'])
-const LOTTIE_WIND_GROUPS   = new Set(['windy'])
+const LOTTIE_RAIN_GROUPS = new Set(['rainy', 'pouring', 'stormy'])
+const LOTTIE_WIND_GROUPS = new Set(['windy'])
 
 // CSS filter tints the cloud canvas to match sky mood
 const CLOUD_FILTER: Record<string, string> = {
-  'sunny':         'none',
+  sunny: 'none',
   'partly-cloudy': 'none',
-  'cloudy':        'brightness(0.78) saturate(0.30)',
-  'foggy':         'brightness(0.84) saturate(0.05)',
-  'snowy':         'brightness(1.15) saturate(0.15) hue-rotate(180deg)',
-  'rainy':         'brightness(0.66) saturate(0.55) hue-rotate(195deg)',
-  'pouring':       'brightness(0.52) saturate(0.65) hue-rotate(202deg)',
-  'stormy':        'brightness(0.38) saturate(0.70) hue-rotate(212deg)',
-  'windy':         'brightness(1.08) saturate(0.40)',
+  cloudy: 'brightness(0.78) saturate(0.30)',
+  foggy: 'brightness(0.84) saturate(0.05)',
+  snowy: 'brightness(1.15) saturate(0.15) hue-rotate(180deg)',
+  rainy: 'brightness(0.66) saturate(0.55) hue-rotate(195deg)',
+  pouring: 'brightness(0.52) saturate(0.65) hue-rotate(202deg)',
+  stormy: 'brightness(0.38) saturate(0.70) hue-rotate(212deg)',
+  windy: 'brightness(1.08) saturate(0.40)'
 }
 
 // Playback speed: clouds drift faster in storms; rain speed matches intensity
 const CLOUD_SPEED: Record<string, number> = {
-  'sunny': 0.50, 'partly-cloudy': 0.65, 'cloudy': 0.90, 'foggy': 0.40,
-  'snowy': 0.55, 'rainy': 1.00, 'pouring': 1.30, 'stormy': 1.80, 'windy': 1.60,
+  sunny: 0.50,
+  'partly-cloudy': 0.65,
+  cloudy: 0.90,
+  foggy: 0.40,
+  snowy: 0.55,
+  rainy: 1.00,
+  pouring: 1.30,
+  stormy: 1.80,
+  windy: 1.60
 }
-const RAIN_SPEED: Record<string, number> = { 'rainy': 0.85, 'pouring': 1.55, 'stormy': 2.30 }
+const RAIN_SPEED: Record<string, number> = { rainy: 0.85, pouring: 1.55, stormy: 2.30 }
 
 @customElement('hass-weather-card')
 export class HassWeatherCard extends LitElement {
@@ -137,7 +144,7 @@ export class HassWeatherCard extends LitElement {
   }
 
   public static getStubConfig (_hass: HomeAssistant, entities: string[], entitiesFallback: string[]): Record<string, unknown> {
-    const entity = entities.find(e => e.startsWith('weather.') ?? entitiesFallback.find(() => true))
+    const entity = entities.find(e => e.startsWith('weather.')) ?? entitiesFallback.find(e => e.startsWith('weather.'))
     if (entity) {
       return { entity }
     }
@@ -207,41 +214,41 @@ export class HassWeatherCard extends LitElement {
   // ── Lottie lifecycle ────────────────────────────────────────────────────
 
   private initLottie (): void {
-    const haCard       = this.shadowRoot?.querySelector('ha-card')
+    const haCard = this.shadowRoot?.querySelector('ha-card')
     const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
-    const canvasRain   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
-    const canvasWind   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
+    const canvasRain = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
+    const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain || !haCard) return
 
     // Set canvas drawing buffer to full card dimensions
-    const w = haCard.clientWidth  || 460
+    const w = haCard.clientWidth || 460
     const h = haCard.clientHeight || 560
-    canvasClouds.width  = w;  canvasClouds.height = h
-    canvasRain.width    = w;  canvasRain.height   = h
+    canvasClouds.width = w; canvasClouds.height = h
+    canvasRain.width = w; canvasRain.height = h
 
     this._lottieCloud = new DotLottie({
-      canvas:   canvasClouds,
-      src:      CLOUDS_LOTTIE,
-      loop:     true,
+      canvas: canvasClouds,
+      src: CLOUDS_LOTTIE,
+      loop: true,
       autoplay: true,
       renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
 
     this._lottieRain = new DotLottie({
-      canvas:   canvasRain,
-      src:      RAIN_LOTTIE,
-      loop:     true,
+      canvas: canvasRain,
+      src: RAIN_LOTTIE,
+      loop: true,
       autoplay: true,
       renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
 
     if (canvasWind) {
-      canvasWind.width  = w
+      canvasWind.width = w
       canvasWind.height = Math.round(h * 0.65)
       this._lottieWind = new DotLottie({
-        canvas:   canvasWind,
-        src:      WIND_LOTTIE,
-        loop:     true,
+        canvas: canvasWind,
+        src: WIND_LOTTIE,
+        loop: true,
         autoplay: true,
         renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
       })
@@ -250,17 +257,17 @@ export class HassWeatherCard extends LitElement {
 
   private updateLottie (group: string): void {
     const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
-    const canvasRain   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
-    const canvasWind   = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
+    const canvasRain = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
+    const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain) return
 
     const showClouds = LOTTIE_CLOUDS_GROUPS.has(group)
-    const showRain   = LOTTIE_RAIN_GROUPS.has(group)
-    const showWind   = LOTTIE_WIND_GROUPS.has(group)
+    const showRain = LOTTIE_RAIN_GROUPS.has(group)
+    const showWind = LOTTIE_WIND_GROUPS.has(group)
 
     canvasClouds.classList.toggle('is-visible', showClouds)
-    canvasRain.classList.toggle('is-visible',   showRain)
-    canvasWind?.classList.toggle('is-visible',  showWind)
+    canvasRain.classList.toggle('is-visible', showRain)
+    canvasWind?.classList.toggle('is-visible', showWind)
 
     // CSS filter tints the cloud canvas to match the sky mood
     canvasClouds.style.filter = CLOUD_FILTER[group] ?? 'none'
@@ -294,27 +301,27 @@ export class HassWeatherCard extends LitElement {
    */
   private renderSceneBg (): string {
     try {
-      const weather   = this.getWeather()
+      const weather = this.getWeather()
       const condition = weather.state
-      const period    = this.getTimePeriod()
-      const sun       = this.getSun()
+      const period = this.getTimePeriod()
+      const sun = this.getSun()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sunAttrs  = (sun?.attributes ?? {}) as Record<string, unknown>
+      const sunAttrs = (sun?.attributes ?? {}) as Record<string, unknown>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const wAttrs    = (weather.attributes ?? {}) as Record<string, unknown>
+      const wAttrs = (weather.attributes ?? {}) as Record<string, unknown>
 
       const opts: SkyOpts = {
-        sunElevation:  typeof sunAttrs.elevation  === 'number' ? sunAttrs.elevation  : undefined,
-        sunAzimuth:    typeof sunAttrs.azimuth    === 'number' ? sunAttrs.azimuth    : undefined,
-        sunRising:     typeof sunAttrs.rising     === 'boolean' ? sunAttrs.rising    : undefined,
+        sunElevation: typeof sunAttrs.elevation === 'number' ? sunAttrs.elevation : undefined,
+        sunAzimuth: typeof sunAttrs.azimuth === 'number' ? sunAttrs.azimuth : undefined,
+        sunRising: typeof sunAttrs.rising === 'boolean' ? sunAttrs.rising : undefined,
         cloudCoverage: typeof wAttrs.cloud_coverage === 'number' ? wAttrs.cloud_coverage : undefined,
-        windSpeed:     typeof wAttrs.wind_speed     === 'number' ? wAttrs.wind_speed     : undefined,
+        windSpeed: typeof wAttrs.wind_speed === 'number' ? wAttrs.wind_speed : undefined,
         windGustSpeed: typeof wAttrs.wind_gust_speed === 'number' ? wAttrs.wind_gust_speed : undefined,
-        visibility:    typeof wAttrs.visibility     === 'number' ? wAttrs.visibility     : undefined,
-        uvIndex:       typeof wAttrs.uv_index       === 'number' ? wAttrs.uv_index       : undefined,
-        humidity:      typeof wAttrs.humidity        === 'number' ? wAttrs.humidity        : undefined,
-        dewPoint:      typeof wAttrs.dew_point       === 'number' ? wAttrs.dew_point       : undefined,
-        pressure:      typeof wAttrs.pressure        === 'number' ? wAttrs.pressure        : undefined,
+        visibility: typeof wAttrs.visibility === 'number' ? wAttrs.visibility : undefined,
+        uvIndex: typeof wAttrs.uv_index === 'number' ? wAttrs.uv_index : undefined,
+        humidity: typeof wAttrs.humidity === 'number' ? wAttrs.humidity : undefined,
+        dewPoint: typeof wAttrs.dew_point === 'number' ? wAttrs.dew_point : undefined,
+        pressure: typeof wAttrs.pressure === 'number' ? wAttrs.pressure : undefined
       }
       return buildBackground(condition, period, opts)
     } catch (_e) {
@@ -335,11 +342,11 @@ export class HassWeatherCard extends LitElement {
     }
     // Fallback to time-based detection
     const totalMinutes = this.currentDate.hour * 60 + this.currentDate.minute
-    if (totalMinutes >= 1260 || totalMinutes < 330) return 'night'     // 21:00–05:29
-    if (totalMinutes < 450)  return 'dawn'       // 05:30–07:29
-    if (totalMinutes < 720)  return 'morning'    // 07:30–11:59
-    if (totalMinutes < 1020) return 'afternoon'  // 12:00–16:59
-    return 'dusk'                                // 17:00–20:59
+    if (totalMinutes >= 1260 || totalMinutes < 330) return 'night' // 21:00–05:29
+    if (totalMinutes < 450) return 'dawn' // 05:30–07:29
+    if (totalMinutes < 720) return 'morning' // 07:30–11:59
+    if (totalMinutes < 1020) return 'afternoon' // 12:00–16:59
+    return 'dusk' // 17:00–20:59
   }
 
   private getConditionGroup (condition: string): string {
@@ -352,7 +359,7 @@ export class HassWeatherCard extends LitElement {
     try {
       const state = this.getWeather().state
       const period = this.getTimePeriod()
-      const group  = this.getConditionGroup(state)
+      const group = this.getConditionGroup(state)
       haCard.setAttribute('data-theme', `${period}-${group}`)
       this.updateLottie(group)
     } catch (_e) {
@@ -364,7 +371,8 @@ export class HassWeatherCard extends LitElement {
 
   protected render (): TemplateResult {
     if (this.error) {
-      return this.error
+      if (this.hass && this.config && this.hass.states[this.config.entity]) this.error = undefined
+      else return this.error
     }
 
     const showForecast = !this.config.hide_forecast_section
@@ -394,12 +402,14 @@ export class HassWeatherCard extends LitElement {
         <!-- All text content, z-index 2 -->
         <div class="card-body">
           ${safeRender(() => this.renderHero())}
-          ${showForecast ? html`
+          ${showForecast
+            ? html`
             <div class="forecast-section">
               ${this.hourlyForecasts?.length ? safeRender(() => this.renderHourlyStrip()) : ''}
               ${safeRender(() => this.renderDailyStrip())}
             </div>
-          ` : ''}
+          `
+            : ''}
         </div>
       </ha-card>
     `
@@ -430,22 +440,22 @@ export class HassWeatherCard extends LitElement {
   // ── Hero (temp + condition/time row) ────────────────────────────────────
 
   private renderHero (): TemplateResult {
-    const weather        = this.getWeather()
-    const temp           = this.config.show_decimal
+    const weather = this.getWeather()
+    const temp = this.config.show_decimal
       ? this.getCurrentTemperature()
       : roundIfNotNull(this.getCurrentTemperature())
-    const tempUnit       = weather.attributes.temperature_unit
-    const weatherString  = this.localize(`weather.${weather.state}`)
-    const localizedTemp  = temp !== null ? this.toConfiguredTempWithUnit(tempUnit, temp) : 'n/a'
-    const subSize        = `${this.config.sub_font_size}rem`
-    const icon           = this.toIcon(weather.state, 'line', false, this.getIconAnimationKind())
-    const iconPx         = `${this.config.icon_size}px`
-    const gapPx          = `${this.config.hero_gap}px`
+    const tempUnit = weather.attributes.temperature_unit
+    const weatherString = this.localize(`weather.${weather.state}`)
+    const localizedTemp = temp !== null ? this.toConfiguredTempWithUnit(tempUnit, temp) : 'n/a'
+    const subSize = `${this.config.sub_font_size}rem`
+    const icon = this.toIcon(weather.state, 'line', false, this.getIconAnimationKind())
+    const iconPx = `${this.config.icon_size}px`
+    const gapPx = `${this.config.hero_gap}px`
 
     const isTimeHero = this.config.hero_display === 'time'
 
     const heroMain = isTimeHero ? this.time() : localizedTemp
-    const metaSub  = isTimeHero ? localizedTemp : this.time()
+    const metaSub = isTimeHero ? localizedTemp : this.time()
 
     return html`
       <div class="hero" style="gap: 0 ${gapPx}">
@@ -490,7 +500,7 @@ export class HassWeatherCard extends LitElement {
         ${items.map(f => safeRender(() => {
           const icon = this.toIcon(f.condition, 'line', true, 'static')
           const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
-          const day  = isLong
+          const day = isLong
             ? f.datetime.setLocale(this.getLocale()).toFormat('cccc')
             : this.localize(`day.${f.datetime.weekday}`)
           return html`
@@ -553,8 +563,8 @@ export class HassWeatherCard extends LitElement {
   private toIcon (weatherState: string, type: 'fill' | 'line', forceDay: boolean, kind: 'static' | 'animated'): string {
     const daytime = forceDay ? 'day' : this.getSun()?.state === 'below_horizon' ? 'night' : 'day'
     const iconMap = kind === 'animated' ? animatedIcons : staticIcons
-    const icon = iconMap[type][weatherState]
-    return icon?.[daytime] || icon
+    const icon = iconMap[type][weatherState] ?? iconMap[type].cloudy
+    return icon?.[daytime] ?? icon ?? ''
   }
 
   private getWeather (): Weather {
@@ -616,7 +626,7 @@ export class HassWeatherCard extends LitElement {
   }
 
   private getLocale (): string {
-    return this.config.locale ?? this.hass.locale.language ?? 'en-GB'
+    return this.config.locale ?? this.hass?.locale?.language ?? 'en-GB'
   }
 
   private time (date: DateTime = this.currentDate): string {
@@ -648,7 +658,7 @@ export class HassWeatherCard extends LitElement {
   }
 
   private getConfiguredTemperatureUnit (): TemperatureUnit {
-    return this.hass.config.unit_system.temperature as TemperatureUnit
+    return (this.hass?.config?.unit_system?.temperature ?? '°C') as TemperatureUnit
   }
 
   private toConfiguredTempWithUnit (unit: TemperatureUnit, temp: number): string {
@@ -671,15 +681,14 @@ export class HassWeatherCard extends LitElement {
   }
 
   private mergeForecasts (maxRowsCount: number, hourly: boolean, source?: WeatherForecast[]): MergedWeatherForecast[] {
-    const forecasts = source !== undefined
-      ? source
-      : this.isLegacyWeather()
+    const forecasts = source ??
+      (this.isLegacyWeather()
         ? this.getWeather().attributes.forecast ?? []
-        : this.forecasts ?? []
+        : this.forecasts ?? [])
 
     const agg = forecasts.reduce<Record<number, WeatherForecast[]>>((acc, forecast) => {
       const d = new Date(forecast.datetime)
-      const unit = hourly ? `${d.getMonth()}-${d.getDate()}-${+d.getHours()}` : d.getDate()
+      const unit = hourly ? `${d.getMonth()}-${d.getDate()}-${+d.getHours()}` : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
       acc[unit] = acc[unit] || []
       acc[unit].push(forecast)
       return acc
@@ -709,9 +718,9 @@ export class HassWeatherCard extends LitElement {
 
   private calculateAverageForecast (forecasts: WeatherForecast[]): MergedWeatherForecast {
     const minTemps = forecasts.map((f) => f.templow ?? f.temperature ?? this.getCurrentTemperature() ?? 0)
-    const minTemp  = min(minTemps)
+    const minTemp = min(minTemps)
     const maxTemps = forecasts.map((f) => f.temperature ?? this.getCurrentTemperature() ?? 0)
-    const maxTemp  = max(maxTemps)
+    const maxTemp = max(maxTemps)
     const precipitationProbabilities = forecasts.map((f) => f.precipitation_probability ?? 0)
     const precipitations = forecasts.map((f) => f.precipitation ?? 0)
     const conditions = forecasts.map((f) => f.condition)
@@ -740,7 +749,7 @@ export class HassWeatherCard extends LitElement {
       return
     }
 
-    const supportsDaily  = this.supportsFeature(WeatherEntityFeature.FORECAST_DAILY)
+    const supportsDaily = this.supportsFeature(WeatherEntityFeature.FORECAST_DAILY)
     const supportsHourly = this.supportsFeature(WeatherEntityFeature.FORECAST_HOURLY)
     // Use daily when available; fall back to hourly-only entities
     const primaryType: 'daily' | 'hourly' = supportsDaily ? 'daily' : 'hourly'
@@ -804,6 +813,9 @@ export class HassWeatherCard extends LitElement {
   private parseDateTime (date: string): DateTime {
     const fromIso = DateTime.fromISO(date)
     if (fromIso.isValid) return fromIso
-    return DateTime.fromJSDate(new Date(date))
+    const fromJs = DateTime.fromJSDate(new Date(date))
+    if (fromJs.isValid) return fromJs
+    console.error(`hass-weather-card - Could not parse datetime: "${date}"`)
+    return DateTime.now()
   }
 }
