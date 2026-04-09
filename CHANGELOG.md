@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.14.0] (2026-04-09)
+## [2.14.1] (2026-04-09)
+
+### Bug Fixes
+
+* **supportsFeature** (both cards): Added an entity-availability guard before calling `getWeather()`. Previously, `supportsFeature()` caught the thrown exception but `createError()` had already permanently set `this.error` — even during the normal ~200ms window where HA hasn't resolved entity states yet. The guard eliminates the root cause entirely.
+* **render() recovery** (both cards): When `this.error` is cleared because the entity has become available, `forecastSubscriber` (and `forecastSubscriberHourly` in hass-weather-card) are also reset to `undefined`, so `willUpdate` will trigger a real forecast subscription on the next cycle instead of keeping the init-time no-op subscriber.
+
+
 
 ### Bug Fixes
 

@@ -148,8 +148,10 @@ export class ClockWeatherCard extends LitElement {
   // https://lit.dev/docs/components/rendering/
   protected render (): TemplateResult {
     if (this.error) {
-      if (this.hass && this.config && this.hass.states[this.config.entity]) this.error = undefined
-      else return this.error
+      if (this.hass && this.config && this.hass.states[this.config.entity]) {
+        this.error = undefined
+        this.forecastSubscriber = undefined
+      } else return this.error
     }
 
     const showToday = !this.config.hide_today_section
@@ -749,6 +751,7 @@ export class ClockWeatherCard extends LitElement {
   }
 
   private supportsFeature (feature: WeatherEntityFeature): boolean {
+    if (!this.hass || !this.config || !this.hass.states[this.config.entity]) return false
     try {
       return (this.getWeather().attributes.supported_features & feature) !== 0
     } catch (e) {

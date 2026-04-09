@@ -371,8 +371,11 @@ export class HassWeatherCard extends LitElement {
 
   protected render (): TemplateResult {
     if (this.error) {
-      if (this.hass && this.config && this.hass.states[this.config.entity]) this.error = undefined
-      else return this.error
+      if (this.hass && this.config && this.hass.states[this.config.entity]) {
+        this.error = undefined
+        this.forecastSubscriber = undefined
+        this.forecastSubscriberHourly = undefined
+      } else return this.error
     }
 
     const showForecast = !this.config.hide_forecast_section
@@ -795,6 +798,7 @@ export class HassWeatherCard extends LitElement {
   }
 
   private supportsFeature (feature: WeatherEntityFeature): boolean {
+    if (!this.hass || !this.config || !this.hass.states[this.config.entity]) return false
     try {
       return (this.getWeather().attributes.supported_features & feature) !== 0
     } catch (_e) {
