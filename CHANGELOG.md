@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.13.1](https://github.com/amirandap/clock-weather-card/compare/v2.13.0...v2.13.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* bug fixes and error resilience (v2.14.0) ([9af9dfe](https://github.com/amirandap/clock-weather-card/commit/9af9dfeb1aa8ff9065c6fb07bb155b6d94d61ec4))
+* complete supportsFeature race condition fix (v2.14.1) ([313a936](https://github.com/amirandap/clock-weather-card/commit/313a9366c4596339482c0e11858d6c461eb41c8b))
+* resilience hardening v2.15.0 ([48cef4b](https://github.com/amirandap/clock-weather-card/commit/48cef4bd184ddd66dd12d05d6271e9b33269bd1c))
+
 ## [2.15.0] (2025-07-24)
 
 ### Bug Fixes
