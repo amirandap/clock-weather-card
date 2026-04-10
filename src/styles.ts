@@ -284,10 +284,9 @@ ha-card[data-theme="dusk-foggy"] {
     transition: opacity 1.4s ease;
   }
 
-  /* Clouds: canvas top:-50% so the animation's lower half aligns with card sky top */
+  /* Clouds: full-card overlay like rain, opacity kept low so stars/sky show through */
   #lottieCanvasClouds {
-    top:    -50%;
-    left:   0;
+    inset: 0;
     width:  100%;
     height: 100%;
   }
@@ -369,6 +368,13 @@ ha-card[data-theme="dusk-foggy"] {
     color: var(--color-text-primary);
     line-height: 1.2;
     letter-spacing: -0.01em;
+  }
+
+  .hero-meta {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    line-height: 1.3;
   }
 
   .current-time {

@@ -402,11 +402,11 @@ export class HassWeatherCard extends LitElement {
 
         <!-- All text content, z-index 2 -->
         <div class="card-body">
-          ${safeRender(() => this.renderHero())}
+          ${this.config.hide_today_section ? '' : safeRender(() => this.renderHero())}
           ${showForecast
             ? html`
             <div class="forecast-section">
-              ${this.hourlyForecasts?.length ? safeRender(() => this.renderHourlyStrip()) : ''}
+              ${(this.config.hourly_forecast && this.hourlyForecasts?.length) ? safeRender(() => this.renderHourlyStrip()) : ''}
               ${safeRender(() => this.renderDailyStrip())}
             </div>
           `
@@ -461,24 +461,31 @@ export class HassWeatherCard extends LitElement {
     const weatherString = this.localize(`weather.${weather.state}`)
     const localizedTemp = temp !== null ? this.toConfiguredTempWithUnit(tempUnit, temp) : 'n/a'
     const subSize = `${this.config.sub_font_size}rem`
-    const icon = this.toIcon(weather.state, 'line', false, this.getIconAnimationKind())
+    const iconType = this.config.weather_icon_type
+    const icon = this.toIcon(weather.state, iconType, false, this.getIconAnimationKind())
     const iconPx = `${this.config.icon_size}px`
     const gapPx = `${this.config.hero_gap}px`
 
     const isTimeHero = this.config.hero_display === 'time'
+    const showClock = !this.config.hide_clock
 
-    const heroMain = isTimeHero ? this.time() : localizedTemp
-    const metaSub = isTimeHero ? localizedTemp : this.time()
+    const heroMain = (isTimeHero && showClock) ? this.time() : localizedTemp
+    const metaSub = (isTimeHero && showClock) ? localizedTemp : (showClock ? this.time() : null)
+
+    const humidity = this.config.show_humidity ? this.getCurrentHumidity() : null
+    const apparent = this.getApparentTemperature()
 
     return html`
       <div class="hero" style="gap: 0 ${gapPx}">
         <div class="hero-left">
           <p class="temp">${heroMain}</p>
           <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+          ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
+          ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
         </div>
         <div class="hero-right">
           <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-          <span class="current-time" style="font-size:${subSize}">${metaSub}</span>
+          ${metaSub !== null ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
         </div>
       </div>
     `
@@ -511,7 +518,7 @@ export class HassWeatherCard extends LitElement {
     return html`
       <div class="forecast-daily" style="--daily-cols: ${items.length}">
         ${items.map(f => safeRender(() => {
-          const icon = this.toIcon(f.condition, 'line', true, 'static')
+          const icon = this.toIcon(f.condition, this.config.weather_icon_type, true, 'static')
           const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
           const day = isLong
             ? f.datetime.setLocale(this.getLocale()).toFormat('cccc')
@@ -774,8 +781,8 @@ export class HassWeatherCard extends LitElement {
         { type: 'weather/subscribe_forecast', forecast_type: primaryType, entity_id: this.config.entity },
         options
       )
-      // Subscribe to hourly separately when entity supports both
-      if (supportsDaily && supportsHourly) {
+      // Subscribe to hourly separately when entity supports both and user enabled it
+      if (supportsDaily && supportsHourly && this.config.hourly_forecast) {
         try {
           const hourlyCallback = (event: WeatherForecastEvent): void => { this.hourlyForecasts = event.forecast ?? [] }
           this.forecastSubscriberHourly = await this.hass.connection.subscribeMessage<WeatherForecastEvent>(

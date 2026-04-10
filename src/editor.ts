@@ -10,10 +10,6 @@ const SCHEMA = [
     selector: { entity: { domain: 'weather' } },
   },
   {
-    name: 'title',
-    selector: { text: {} },
-  },
-  {
     name: 'sun_entity',
     selector: { entity: { domain: 'sun' } },
   },
@@ -28,10 +24,6 @@ const SCHEMA = [
   {
     name: 'apparent_sensor',
     selector: { entity: { domain: 'sensor', device_class: 'temperature' } },
-  },
-  {
-    name: 'aqi_sensor',
-    selector: { entity: { domain: 'sensor' } },
   },
   {
     name: '',
@@ -91,10 +83,6 @@ const SCHEMA = [
     schema: [
       {
         name: 'time_pattern',
-        selector: { text: {} },
-      },
-      {
-        name: 'date_pattern',
         selector: { text: {} },
       },
     ],
@@ -173,10 +161,6 @@ const SCHEMA = [
         name: 'hide_clock',
         selector: { boolean: {} },
       },
-      {
-        name: 'hide_date',
-        selector: { boolean: {} },
-      },
     ],
   },
   {
@@ -201,18 +185,15 @@ const SCHEMA = [
 
 const LABELS: Record<string, string> = {
   entity: 'Weather Entity',
-  title: 'Card Title',
   sun_entity: 'Sun Entity',
   temperature_sensor: 'Temperature Sensor (override)',
   humidity_sensor: 'Humidity Sensor (override)',
   apparent_sensor: 'Apparent Temperature Sensor',
-  aqi_sensor: 'Air Quality Sensor',
   weather_icon_type: 'Icon Style',
   animated_icon: 'Animated Icon',
   time_format: 'Time Format',
   day_name_format: 'Day Name Format',
   time_pattern: 'Time Pattern',
-  date_pattern: 'Date Pattern',
   hero_display: 'Hero Display',
   forecast_rows: 'Forecast Rows',
   icon_size: 'Icon Size',
@@ -224,7 +205,6 @@ const LABELS: Record<string, string> = {
   hide_today_section: 'Hide Today Section',
   hide_forecast_section: 'Hide Forecast Section',
   hide_clock: 'Hide Clock',
-  hide_date: 'Hide Date',
   use_browser_time: 'Use Browser Time',
   locale: 'Locale',
   time_zone: 'Time Zone',

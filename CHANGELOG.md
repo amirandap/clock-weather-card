@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.16.0] (2026-04-10)
+
+### Bug Fixes
+
+* **lottie clouds not visible**: Removed erroneous `top: -50%` offset on `#lottieCanvasClouds` canvas. The canvas was shifted so only the upper half was rendered inside the card's clipping container, while the cloud animation actually draws in the lower half. Now uses `inset: 0` matching the rain canvas.
+
+### Features / Implemented UI Parameters
+
+* **`weather_icon_type`**: Hero and daily forecast icons now respect the configured icon style (`line` / `fill`) instead of being hardcoded to `line`.
+* **`hide_today_section`**: Wrapping the hero section in a conditional correctly hides it when enabled.
+* **`hide_clock`**: When enabled, the time sub-text is suppressed in the hero. When `hero_display: time` is also set, the card falls back to showing temperature as the hero main value.
+* **`show_humidity`**: Renders current humidity below the condition label in the hero when enabled (uses `humidity_sensor` override if configured).
+* **`apparent_sensor`**: Renders a "Feels like X°" label in the hero whenever an apparent temperature sensor is configured.
+* **`hourly_forecast`**: Fan-out hourly subscription and the hourly strip are now gated behind this config flag. Previously hourly data was always fetched and displayed when the weather entity supported it.
+
+### Editor Cleanup (removed non-functional fields)
+
+* Removed `title`, `date_pattern`, `hide_date`, `aqi_sensor` from the visual editor — these fields had no effect in hass-weather-card.
+
 ## [2.15.0] (2025-07-24)
 
 ### Bug Fixes
