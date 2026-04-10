@@ -1,7 +1,7 @@
 {
   "name": "hass-weather-card",
   "version": "2.18.1",
-  "description": "Lovelace hass-weather-card — animated coastal weather scene for Home Assistant",
+  "description": "Lovelace hass-weather-card \u2014 animated coastal weather scene for Home Assistant",
   "keywords": [
     "home-assistant",
     "homeassistant",
@@ -39,6 +39,8 @@
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 || ^17.0.0",
     "eslint-plugin-promise": "^7.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "rollup": "^4.0.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-copy": "^3.5.0",
@@ -51,6 +53,12 @@
     "start": "rollup -c rollup.config.dev.js --watch",
     "build": "npx rollup -c",
     "lint": "eslint **/*.ts --max-warnings 0",
-    "rollup": "rollup -c"
+    "rollup": "rollup -c",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.ts": [
+      "eslint --max-warnings 0"
+    ]
   }
 }
