@@ -330,27 +330,19 @@ ha-card[data-theme="dusk-foggy"] {
     gap: 16px;
   }
 
-  /* ── Hero: two-column (temp+condition left / icon+time right) */
+  /* ── Hero: temp + icon top row, condition full-width below */
   .hero {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-    gap: 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     margin-top: 8px;
   }
 
-  .hero-left {
+  .hero-top {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .hero-right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .temp {
@@ -368,6 +360,9 @@ ha-card[data-theme="dusk-foggy"] {
     color: var(--color-text-primary);
     line-height: 1.2;
     letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .hero-meta {
@@ -383,7 +378,6 @@ ha-card[data-theme="dusk-foggy"] {
     color: var(--color-text-secondary);
     line-height: 1;
     letter-spacing: -0.02em;
-    text-align: center;
   }
 
   /* ── Forecast strips (v1 layout) */
@@ -403,6 +397,7 @@ ha-card[data-theme="dusk-foggy"] {
     border-radius: 10px;
     padding: 10px 4px;
     margin-top: 8px;
+    overflow: hidden;
   }
 
   .hour-slot {
@@ -422,8 +417,8 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .hour-slot__icon {
-    width: 42px;
-    height: 42px;
+    width: clamp(28px, 10cqw, 42px);
+    height: clamp(28px, 10cqw, 42px);
     filter: var(--icon-filter);
   }
 
@@ -446,6 +441,7 @@ ha-card[data-theme="dusk-foggy"] {
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     padding-top: 12px;
     margin-top: 8px;
+    overflow: hidden;
   }
 
   .forecast-slot {
@@ -454,6 +450,8 @@ ha-card[data-theme="dusk-foggy"] {
     align-items: center;
     gap: 4px;
     padding: 0 4px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .forecast-slot:not(:last-child) {

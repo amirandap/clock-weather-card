@@ -412,6 +412,116 @@ function gradientStops (stops: Array<[number, string]>): string {
 /* ══════════════════════════════════════════════════════════════════════ */
 
 /**
+/* ══════════════════════════════════════════════════════════════════════ */
+/*   PROGRESSIVE CARD GRADIENT                                            */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Per-condition gradient anchors: [top_0%, mid_45%, bot_100%]
+ * Four stops: night (elev ≤ -6), golden-rising (dawn), golden-setting (dusk), full-day.
+ */
+type GradColors = [string, string, string]
+interface CondGrad { night: GradColors; goldenR: GradColors; goldenS: GradColors; day: GradColors }
+
+const CARD_GRAD: Record<string, CondGrad> = {
+  'sunny': {
+    night:   ['#243868', '#182848', '#0E1830'],
+    goldenR: ['#2a0850', '#b82810', '#f09020'],
+    goldenS: ['#f5a020', '#e03030', '#701060'],
+    day:     ['#ffe266', '#ffb020', '#e88000']
+  },
+  'partly-cloudy': {
+    night:   ['#1E3050', '#142438', '#0C1828'],
+    goldenR: ['#1e0840', '#903028', '#c07030'],
+    goldenS: ['#d07830', '#904060', '#481060'],
+    day:     ['#aeddf5', '#6ab8e8', '#3890d0']
+  },
+  'cloudy': {
+    night:   ['#1A2832', '#121C28', '#0A1218'],
+    goldenR: ['#1a1030', '#5a3848', '#706040'],
+    goldenS: ['#806050', '#503858', '#301840'],
+    day:     ['#8aaab8', '#5a8aa0', '#3a6a80']
+  },
+  'foggy': {
+    night:   ['#1E2028', '#161820', '#0E1014'],
+    goldenR: ['#1e1830', '#504548', '#706860'],
+    goldenS: ['#a07868', '#706060', '#504858'],
+    day:     ['#b0b8bc', '#808890', '#606068']
+  },
+  'rainy': {
+    night:   ['#142838', '#0E1C28', '#081018'],
+    goldenR: ['#150d25', '#342038', '#3a2830'],
+    goldenS: ['#603040', '#3c1c30', '#1c0818'],
+    day:     ['#7aaac8', '#3a7098', '#1a5078']
+  },
+  'pouring': {
+    night:   ['#101820', '#0A1018', '#060A10'],
+    goldenR: ['#0d0a18', '#1c1428', '#1a1018'],
+    goldenS: ['#2a1020', '#180810', '#0c0408'],
+    day:     ['#3a5a72', '#1e3a52', '#0a1e32']
+  },
+  'stormy': {
+    night:   ['#12141A', '#0C0E14', '#060810'],
+    goldenR: ['#08080e', '#120c14', '#0e080c'],
+    goldenS: ['#180808', '#0e0408', '#080204'],
+    day:     ['#3a4a4e', '#1e2c32', '#0a1418']
+  },
+  'snowy': {
+    night:   ['#222C50', '#162040', '#0C1428'],
+    goldenR: ['#28185a', '#806890', '#c0a0c8'],
+    goldenS: ['#c08060', '#8a5068', '#502850'],
+    day:     ['#daeef8', '#a8d4ec', '#6ab0d8']
+  },
+  'windy': {
+    night:   ['#243868', '#182848', '#0E1830'],
+    goldenR: ['#1e0840', '#903028', '#c07030'],
+    goldenS: ['#d07830', '#904060', '#481060'],
+    day:     ['#aeddf5', '#6ab8e8', '#3890d0']
+  }
+}
+
+/**
+ * Compute a dynamic CSS gradient based on sun elevation.
+ * Smoothly interpolates between night → golden hour → full day colors.
+ *
+ * @param conditionGroup  Condition slug (e.g. 'partly-cloudy')
+ * @param elev            Sun elevation in degrees (-90..90); undefined = full day
+ * @param rising          Whether sun is rising (dawn) or setting (dusk)
+ */
+export function computeCardGradient (conditionGroup: string, elev: number | undefined, rising?: boolean): string {
+  const g = CARD_GRAD[conditionGroup] ?? CARD_GRAD['partly-cloudy']
+
+  // Map elevation to a blending factor: 0 = full night, 0.5 = golden hour, 1 = full day
+  let t: number
+  if (elev === undefined) {
+    t = 1
+  } else if (elev <= -6) {
+    t = 0
+  } else if (elev <= 2) {
+    // -6..2 → 0..0.5
+    t = 0.5 * (elev + 6) / 8
+  } else if (elev <= 20) {
+    // 2..20 → 0.5..1
+    t = 0.5 + 0.5 * ((elev - 2) / 18)
+  } else {
+    t = 1
+  }
+
+  // Use rising-sun (dawn) vs setting-sun (dusk) golden colors
+  const golden: GradColors = rising !== false ? g.goldenR : g.goldenS
+
+  const mix = (a: GradColors, b: GradColors, u: number): string =>
+    `linear-gradient(148deg, ${lerpColor(a[0], b[0], u)} 0%, ${lerpColor(a[1], b[1], u)} 45%, ${lerpColor(a[2], b[2], u)} 100%)`
+
+  if (t <= 0.5) {
+    return mix(g.night, golden, t / 0.5)
+  }
+  return mix(golden, g.day, (t - 0.5) / 0.5)
+}
+
+/* ══════════════════════════════════════════════════════════════════════ */
+
+/**
  * Builds a full-card SVG string for the coastal weather scene.
  *
  * @param condition  HA weather condition string (e.g. 'sunny', 'rainy')

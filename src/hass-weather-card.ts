@@ -35,7 +35,7 @@ import { safeRender } from './helpers'
 import { DateTime } from 'luxon'
 import { DotLottie } from '@lottiefiles/dotlottie-web'
 import { CLOUDS_LOTTIE, RAIN_LOTTIE, WIND_LOTTIE } from './lottie-assets'
-import { buildBackground, type SkyOpts, elevationToPeriod } from './svg-scene'
+import { buildBackground, type SkyOpts, elevationToPeriod, computeCardGradient } from './svg-scene'
 import './editor'
 
 // Point DotLottie at the co-located WASM file so it doesn't fetch from CDN
@@ -360,6 +360,12 @@ export class HassWeatherCard extends LitElement {
       const group = this.getConditionGroup(state)
       haCard.setAttribute('data-theme', `${period}-${group}`)
       this.updateLottie(group)
+      // Progressive gradient: interpolate continuously by sun elevation
+      const sun = this.getSun()
+      const attrs = (sun?.attributes ?? {}) as Record<string, unknown>
+      const elev = typeof attrs.elevation === 'number' ? attrs.elevation : undefined
+      const rising = typeof attrs.rising === 'boolean' ? attrs.rising : undefined
+      ;(haCard as HTMLElement).style.setProperty('--widget-gradient', computeCardGradient(group, elev, rising))
     } catch (_e) {
       // Weather entity not ready yet — leave existing theme
     }
@@ -476,17 +482,15 @@ export class HassWeatherCard extends LitElement {
     const apparent = this.getApparentTemperature()
 
     return html`
-      <div class="hero" style="gap: 0 ${gapPx}">
-        <div class="hero-left">
+      <div class="hero">
+        <div class="hero-top">
           <p class="temp">${heroMain}</p>
-          <span class="condition" style="font-size:${subSize}">${weatherString}</span>
-          ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
-          ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
-        </div>
-        <div class="hero-right">
           <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-          ${metaSub !== null ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
         </div>
+        <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+        ${metaSub !== null ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
+        ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
+        ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
       </div>
     `
   }
@@ -520,7 +524,10 @@ export class HassWeatherCard extends LitElement {
 
   private renderDailyStrip (): TemplateResult {
     const cols = this.config.day_forecast_columns
-    const items = this.mergeForecasts(cols, false)
+    const now = this.toZonedDate(this.currentDate)
+    const tomorrowStart = now.startOf('day').plus({ days: 1 })
+    const allItems = this.mergeForecasts(cols + 3, false)
+    const items = allItems.filter(f => f.datetime >= tomorrowStart).slice(0, cols)
     const entityTempUnit = this.getWeather().attributes.temperature_unit
     const isLong = this.config.day_name_format === 'long'
     return html`
