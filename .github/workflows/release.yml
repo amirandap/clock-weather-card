@@ -19,8 +19,8 @@ jobs:
 
       - name: Build the card
         run: |
-          npm ci
-          npm run build
+          yarn install --frozen-lockfile
+          yarn build
 
       - name: Upload JS to release
         uses: svenstaro/upload-release-action@v2

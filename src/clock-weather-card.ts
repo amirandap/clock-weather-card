@@ -478,7 +478,7 @@ export class ClockWeatherCard extends LitElement {
   private toIcon (weatherState: string, type: 'fill' | 'line', forceDay: boolean, kind: 'static' | 'animated'): string {
     const daytime = forceDay ? 'day' : this.getSun()?.state === 'below_horizon' ? 'night' : 'day'
     const iconMap = kind === 'animated' ? animatedIcons : staticIcons
-    const icon = iconMap[type][weatherState] ?? iconMap[type]['cloudy']
+    const icon = iconMap[type][weatherState] ?? iconMap[type].cloudy
     return icon?.[daytime] ?? icon ?? ''
   }
 

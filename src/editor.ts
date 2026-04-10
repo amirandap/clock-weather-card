@@ -243,17 +243,15 @@ export class HassWeatherCardEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${SCHEMA}
-        .computeLabel=${this._computeLabel}
-        @value-changed=${this._valueChanged}
+        .computeLabel=${(schema: { name: string }) => this._computeLabel(schema)}
+        @value-changed=${(ev: CustomEvent) => { this._valueChanged(ev) }}
       ></ha-form>
     `
   }
 
-  static get styles (): CSSResultGroup {
-    return css`
+  static readonly styles: CSSResultGroup = css`
       ha-form {
         display: block;
       }
     `
-  }
 }

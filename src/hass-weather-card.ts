@@ -470,7 +470,6 @@ export class HassWeatherCard extends LitElement {
     const iconType = this.config.weather_icon_type
     const icon = this.toIcon(weather.state, iconType, false, this.getIconAnimationKind())
     const iconPx = `${this.config.icon_size}px`
-    const gapPx = `${this.config.hero_gap}px`
 
     const isTimeHero = this.config.hero_display === 'time'
     const showClock = !this.config.hide_clock
