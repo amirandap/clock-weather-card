@@ -13,6 +13,7 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   entity: string
   title?: string
   sun_entity?: string
+  moon_entity?: string
   climate_entity?: string
   temperature_sensor?: string
   humidity_sensor?: string
@@ -53,6 +54,7 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   entity: string
   title?: string
   sun_entity: string
+  moon_entity?: string
   climate_entity?: string
   temperature_sensor?: string
   humidity_sensor?: string

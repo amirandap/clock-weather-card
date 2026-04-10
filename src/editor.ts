@@ -14,6 +14,10 @@ const SCHEMA = [
     selector: { entity: { domain: 'sun' } }
   },
   {
+    name: 'moon_entity',
+    selector: { entity: { domain: 'moon' } }
+  },
+  {
     name: 'temperature_sensor',
     selector: { entity: { domain: 'sensor', device_class: 'temperature' } }
   },
@@ -190,6 +194,7 @@ const SCHEMA = [
 const LABELS: Record<string, string> = {
   entity: 'Weather Entity',
   sun_entity: 'Sun Entity',
+  moon_entity: 'Moon Entity',
   temperature_sensor: 'Temperature Sensor (override)',
   humidity_sensor: 'Humidity Sensor (override)',
   apparent_sensor: 'Apparent Temperature Sensor',

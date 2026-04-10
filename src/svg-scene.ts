@@ -48,6 +48,12 @@ export interface SkyOpts {
   dewPoint?: number
   /** Atmospheric pressure in hPa. */
   pressure?: number
+  /**
+   * Moon phase from the moon.moon HA integration.
+   * One of: new_moon | waxing_crescent | first_quarter | waxing_gibbous |
+   *         full_moon | waning_gibbous | last_quarter | waning_crescent
+   */
+  moonPhase?: string
 }
 
 interface SkyBodyPos { sunX: number, sunY: number, moonX: number, moonY: number }
@@ -155,13 +161,89 @@ function svgSun (cx: number, cy: number, opacity: number, color?: string): strin
 </g>`
 }
 
-function svgMoon (cx: number, cy: number): string {
-  return `
-<g transform="translate(${cx},${cy})">
+/**
+ * Draw a phase-accurate moon using SVG clip paths.
+ *
+ * The moon disc (r=34) is always drawn in ivory (#F0E8D0).
+ * An overlay circle is shifted horizontally to carve the correct
+ * illuminated vs shadow portion for each phase:
+ *
+ *   new_moon         — fully dark (nearly invisible, just a glow ring)
+ *   waxing_crescent  — thin right sliver lit
+ *   first_quarter    — right half lit
+ *   waxing_gibbous   — right 3/4 lit
+ *   full_moon        — fully lit
+ *   waning_gibbous   — left 3/4 lit
+ *   last_quarter     — left half lit
+ *   waning_crescent  — thin left sliver lit
+ */
+function svgMoonPhased (cx: number, cy: number, phase: string): string {
+  const r = 34
+  const glow = `
   <circle r="48" fill="#F0E8C8" opacity="0.10"/>
-  <circle r="38" fill="#F0E8C8" opacity="0.18"/>
-  <circle r="34" fill="#F0E8D0"/>
-  <circle cx="14" cy="-10" r="28" fill="#142840"/>
+  <circle r="38" fill="#F0E8C8" opacity="0.18"/>`
+
+  // Shadow overlay colour matches the night sky
+  const shadow = '#142840'
+
+  // For each phase: [shadowCx, shadowCy, shadowR, isGibbous]
+  // isGibbous=false → shadow circle covers part of the lit disc (crescent)
+  // isGibbous=true  → shadow is inset, revealing a gibbous shape
+  const phases: Record<string, [number, number, number, boolean] | null> = {
+    new_moon: null,
+    full_moon: [0, 0, 0, false],
+    waxing_crescent: [-24, 0, r, false],
+    first_quarter: [0, 0, r, false],
+    waxing_gibbous: [22, 0, r, false],
+    waning_gibbous: [-22, 0, r, false],
+    last_quarter: [0, 0, r, true],
+    waning_crescent: [24, 0, r, true]
+  }
+
+  const def = phases[phase]
+
+  // new_moon: just a very dim ring, no disc
+  if (def === undefined || def === null || phase === 'new_moon') {
+    return `<g transform="translate(${cx},${cy})">${glow}</g>`
+  }
+
+  // full_moon: plain disc, no shadow
+  if (phase === 'full_moon') {
+    return `<g transform="translate(${cx},${cy})">
+  ${glow}
+  <circle r="${r}" fill="#F0E8D0"/>
+</g>`
+  }
+
+  const [scx, , , flipShadow] = def
+  const id = `mp${Math.abs(cx)}${Math.abs(cy)}`
+
+  // Crescent phases: shadow disc overlays the base disc
+  if (!flipShadow) {
+    // The shadow disc cx is what shifts the shadow to carve a crescent
+    // first_quarter: shadow cx=0 → left half shadowed, right half lit
+    // waxing/waning gibbous: shadow cx=±22 → smaller shadow → gibbous shape
+    // waxing crescent: shadow cx=-24 → bigger overlap → thin right sliver lit
+    return `<g transform="translate(${cx},${cy})">
+  ${glow}
+  <circle r="${r}" fill="#F0E8D0"/>
+  <circle cx="${scx}" cy="0" r="${r}" fill="${shadow}"
+    clip-path="url(#${id})"/>
+  <clipPath id="${id}">
+    <rect x="${-r - 2}" y="${-r - 2}" width="${r + 2}" height="${(r + 2) * 2}"/>
+  </clipPath>
+</g>`
+  }
+
+  // Last quarter / waning crescent: mirror — clip the right half
+  return `<g transform="translate(${cx},${cy})">
+  ${glow}
+  <circle r="${r}" fill="#F0E8D0"/>
+  <circle cx="${-scx}" cy="0" r="${r}" fill="${shadow}"
+    clip-path="url(#${id})"/>
+  <clipPath id="${id}">
+    <rect x="0" y="${-r - 2}" width="${r + 2}" height="${(r + 2) * 2}"/>
+  </clipPath>
 </g>`
 }
 
@@ -576,7 +658,7 @@ export function buildBackground (condition: string, period: string, opts: SkyOpt
     const topColor = lerpColor('#0C1830', '#1E3050', dayFactor * 2)
     const bottomColor = lerpColor('#142640', '#2A3858', dayFactor * 2)
     skyGrad = gradient(topColor, bottomColor)
-    skyContent = svgStars() + svgMoon(pos.moonX, pos.moonY)
+    skyContent = svgStars() + svgMoonPhased(pos.moonX, pos.moonY, opts.moonPhase ?? 'waxing_crescent')
     land = svgUrbanScene({ city: '#141E30', beach: '#3A3428', foam: '#1A2838', oceanD: '#162038', oceanM: '#0E1828', oceanN: '#0A1420', palm: '#0C1420', tint: '#081020', tintOp: 0.30 })
   } else if (isDawn) {
     // Progressive dawn: blend from deep purple → warm orange based on dayFactor

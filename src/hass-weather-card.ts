@@ -308,6 +308,10 @@ export class HassWeatherCard extends LitElement {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const wAttrs = (weather.attributes ?? {}) as Record<string, unknown>
 
+      const moonEntity = this.config.moon_entity
+        ? this.hass.states[this.config.moon_entity]
+        : undefined
+
       const opts: SkyOpts = {
         sunElevation: typeof sunAttrs.elevation === 'number' ? sunAttrs.elevation : undefined,
         sunAzimuth: typeof sunAttrs.azimuth === 'number' ? sunAttrs.azimuth : undefined,
@@ -319,7 +323,8 @@ export class HassWeatherCard extends LitElement {
         uvIndex: typeof wAttrs.uv_index === 'number' ? wAttrs.uv_index : undefined,
         humidity: typeof wAttrs.humidity === 'number' ? wAttrs.humidity : undefined,
         dewPoint: typeof wAttrs.dew_point === 'number' ? wAttrs.dew_point : undefined,
-        pressure: typeof wAttrs.pressure === 'number' ? wAttrs.pressure : undefined
+        pressure: typeof wAttrs.pressure === 'number' ? wAttrs.pressure : undefined,
+        moonPhase: typeof moonEntity?.state === 'string' ? moonEntity.state : undefined
       }
       return buildBackground(condition, period, opts)
     } catch (_e) {
@@ -566,6 +571,7 @@ export class HassWeatherCard extends LitElement {
     return {
       ...config,
       sun_entity: config.sun_entity ?? 'sun.sun',
+      moon_entity: config.moon_entity ?? undefined,
       climate_entity: config.climate_entity ?? undefined,
       temperature_sensor: config.temperature_sensor,
       humidity_sensor: config.humidity_sensor,
