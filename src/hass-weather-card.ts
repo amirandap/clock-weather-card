@@ -150,7 +150,7 @@ export class HassWeatherCard extends LitElement {
   }
 
   public getCardSize (): number {
-    return 3 + roundUp(this.config.forecast_rows / 2)
+    return 3 + roundUp(this.config.day_forecast_columns / 2)
   }
 
   public setConfig (config?: ClockWeatherCardConfig): void {
@@ -160,8 +160,8 @@ export class HassWeatherCard extends LitElement {
     if (!config.entity) {
       throw this.createError('Attribute "entity" must be present.')
     }
-    if (config.forecast_rows && config.forecast_rows < 1) {
-      throw this.createError('Attribute "forecast_rows" must be greater than 0.')
+    if (config.day_forecast_columns && config.day_forecast_columns < 1) {
+      throw this.createError('Attribute "day_forecast_columns" must be greater than 0.')
     }
     if (config.time_format && config.time_format.toString() !== '24' && config.time_format.toString() !== '12') {
       throw this.createError('Attribute "time_format" must either be "12" or "24".')
@@ -494,15 +494,23 @@ export class HassWeatherCard extends LitElement {
   // ── V1-style forecast strips ─────────────────────────────────────────────
 
   private renderHourlyStrip (): TemplateResult {
-    const items = this.mergeForecasts(4, true, this.hourlyForecasts ?? [])
+    const cols = this.config.hourly_forecast_columns
+    const entityTempUnit = this.getWeather().attributes.temperature_unit
+    const items = this.mergeForecasts(cols, true, this.hourlyForecasts ?? [])
     return html`
       <div class="forecast-hourly">
         ${items.map(f => safeRender(() => {
-          const icon = this.toIcon(f.condition, 'line', false, this.getIconAnimationKind())
+          const icon = this.toIcon(f.condition, this.config.weather_icon_type, false, this.getIconAnimationKind())
+          const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
+          const precip = f.precipitation_probability != null && f.precipitation_probability > 0
+            ? html`<span class="hour-slot__precip">${Math.round(f.precipitation_probability)}%</span>`
+            : ''
           return html`
             <div class="hour-slot">
-              <img class="hour-slot__icon" src=${icon} alt="" />
               <span class="hour-slot__time">${this.time(f.datetime)}</span>
+              <img class="hour-slot__icon" src=${icon} alt="" />
+              <span class="hour-slot__temp">${temp}</span>
+              ${precip}
             </div>
           `
         }))}
@@ -511,8 +519,8 @@ export class HassWeatherCard extends LitElement {
   }
 
   private renderDailyStrip (): TemplateResult {
-    const rows = this.config.forecast_rows ?? 4
-    const items = this.mergeForecasts(rows, false)
+    const cols = this.config.day_forecast_columns
+    const items = this.mergeForecasts(cols, false)
     const entityTempUnit = this.getWeather().attributes.temperature_unit
     const isLong = this.config.day_name_format === 'long'
     return html`
@@ -556,7 +564,8 @@ export class HassWeatherCard extends LitElement {
       temperature_sensor: config.temperature_sensor,
       humidity_sensor: config.humidity_sensor,
       weather_icon_type: config.weather_icon_type ?? 'line',
-      forecast_rows: config.forecast_rows ?? 5,
+      day_forecast_columns: config.day_forecast_columns ?? 5,
+      hourly_forecast_columns: config.hourly_forecast_columns ?? 4,
       hourly_forecast: config.hourly_forecast ?? false,
       animated_icon: config.animated_icon ?? true,
       time_format: config.time_format?.toString() as '12' | '24' | undefined ?? '12',

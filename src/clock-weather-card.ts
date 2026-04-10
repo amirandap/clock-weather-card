@@ -86,7 +86,7 @@ export class ClockWeatherCard extends LitElement {
   }
 
   public getCardSize (): number {
-    return 3 + roundUp(this.config.forecast_rows / 2)
+    return 3 + roundUp(this.config.day_forecast_columns / 2)
   }
 
   // https://lit.dev/docs/components/properties/#accessors-custom
@@ -99,8 +99,8 @@ export class ClockWeatherCard extends LitElement {
       throw this.createError('Attribute "entity" must be present.')
     }
 
-    if (config.forecast_rows && config.forecast_rows < 1) {
-      throw this.createError('Attribute "forecast_rows" must be greater than 0.')
+    if (config.day_forecast_columns && config.day_forecast_columns < 1) {
+      throw this.createError('Attribute "day_forecast_columns" must be greater than 0.')
     }
 
     if (config.time_format && config.time_format.toString() !== '24' && config.time_format.toString() !== '12') {
@@ -263,7 +263,7 @@ export class ClockWeatherCard extends LitElement {
   private renderForecast (): TemplateResult[] {
     const weather = this.getWeather()
     const currentTemp = roundIfNotNull(this.getCurrentTemperature())
-    const maxRowsCount = this.config.forecast_rows
+    const maxRowsCount = this.config.day_forecast_columns
     const hourly = this.config.hourly_forecast
     const temperatureUnit = weather.attributes.temperature_unit
 
@@ -450,7 +450,8 @@ export class ClockWeatherCard extends LitElement {
       temperature_sensor: config.temperature_sensor,
       humidity_sensor: config.humidity_sensor,
       weather_icon_type: config.weather_icon_type ?? 'line',
-      forecast_rows: config.forecast_rows ?? 5,
+      day_forecast_columns: config.day_forecast_columns ?? 5,
+      hourly_forecast_columns: config.hourly_forecast_columns ?? 4,
       hourly_forecast: config.hourly_forecast ?? false,
       animated_icon: config.animated_icon ?? true,
       time_format: config.time_format?.toString() as '12' | '24' | undefined,

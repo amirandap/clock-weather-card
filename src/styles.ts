@@ -399,7 +399,9 @@ ha-card[data-theme="dusk-foggy"] {
     justify-content: space-between;
     align-items: flex-start;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 12px;
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    padding: 10px 4px;
     margin-top: 8px;
   }
 
@@ -407,14 +409,9 @@ ha-card[data-theme="dusk-foggy"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     flex: 1;
-  }
-
-  .hour-slot__icon {
-    width: 36px;
-    height: 36px;
-    filter: var(--icon-filter);
+    padding: 4px 2px;
   }
 
   .hour-slot__time {
@@ -422,6 +419,25 @@ ha-card[data-theme="dusk-foggy"] {
     font-weight: 700;
     text-transform: uppercase;
     color: var(--color-text-secondary);
+  }
+
+  .hour-slot__icon {
+    width: 42px;
+    height: 42px;
+    filter: var(--icon-filter);
+  }
+
+  .hour-slot__temp {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--color-text-primary, #fff);
+  }
+
+  .hour-slot__precip {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(120, 200, 255, 0.9);
+    filter: drop-shadow(0 0 2px rgba(80, 160, 255, 0.6));
   }
 
   .forecast-daily {

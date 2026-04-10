@@ -18,7 +18,10 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   humidity_sensor?: string
   weather_icon_type?: 'fill' | 'line'
   animated_icon?: boolean
-  forecast_rows?: number
+  /** Number of daily forecast columns (default: 5) */
+  day_forecast_columns?: number
+  /** Number of hourly forecast columns (default: 4) */
+  hourly_forecast_columns?: number
   locale?: string
   time_format?: '12' | '24'
   time_pattern?: string
@@ -55,7 +58,8 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   humidity_sensor?: string
   weather_icon_type: 'fill' | 'line'
   animated_icon: boolean
-  forecast_rows: number
+  day_forecast_columns: number
+  hourly_forecast_columns: number
   locale?: string
   time_format?: '12' | '24'
   time_pattern?: string

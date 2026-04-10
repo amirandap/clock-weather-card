@@ -7,23 +7,23 @@ const SCHEMA = [
   {
     name: 'entity',
     required: true,
-    selector: { entity: { domain: 'weather' } },
+    selector: { entity: { domain: 'weather' } }
   },
   {
     name: 'sun_entity',
-    selector: { entity: { domain: 'sun' } },
+    selector: { entity: { domain: 'sun' } }
   },
   {
     name: 'temperature_sensor',
-    selector: { entity: { domain: 'sensor', device_class: 'temperature' } },
+    selector: { entity: { domain: 'sensor', device_class: 'temperature' } }
   },
   {
     name: 'humidity_sensor',
-    selector: { entity: { domain: 'sensor', device_class: 'humidity' } },
+    selector: { entity: { domain: 'sensor', device_class: 'humidity' } }
   },
   {
     name: 'apparent_sensor',
-    selector: { entity: { domain: 'sensor', device_class: 'temperature' } },
+    selector: { entity: { domain: 'sensor', device_class: 'temperature' } }
   },
   {
     name: '',
@@ -35,17 +35,17 @@ const SCHEMA = [
           select: {
             options: [
               { value: 'line', label: 'Line' },
-              { value: 'fill', label: 'Fill' },
+              { value: 'fill', label: 'Fill' }
             ],
-            mode: 'dropdown',
-          },
-        },
+            mode: 'dropdown'
+          }
+        }
       },
       {
         name: 'animated_icon',
-        selector: { boolean: {} },
-      },
-    ],
+        selector: { boolean: {} }
+      }
+    ]
   },
   {
     name: '',
@@ -57,11 +57,11 @@ const SCHEMA = [
           select: {
             options: [
               { value: '12', label: '12h (AM/PM)' },
-              { value: '24', label: '24h' },
+              { value: '24', label: '24h' }
             ],
-            mode: 'dropdown',
-          },
-        },
+            mode: 'dropdown'
+          }
+        }
       },
       {
         name: 'day_name_format',
@@ -69,13 +69,13 @@ const SCHEMA = [
           select: {
             options: [
               { value: 'long', label: 'Long (Monday)' },
-              { value: 'short', label: 'Short (Mon)' },
+              { value: 'short', label: 'Short (Mon)' }
             ],
-            mode: 'dropdown',
-          },
-        },
-      },
-    ],
+            mode: 'dropdown'
+          }
+        }
+      }
+    ]
   },
   {
     name: '',
@@ -83,9 +83,9 @@ const SCHEMA = [
     schema: [
       {
         name: 'time_pattern',
-        selector: { text: {} },
-      },
-    ],
+        selector: { text: {} }
+      }
+    ]
   },
   {
     name: '',
@@ -97,17 +97,17 @@ const SCHEMA = [
           select: {
             options: [
               { value: 'temperature', label: 'Temperature' },
-              { value: 'time', label: 'Time' },
+              { value: 'time', label: 'Time' }
             ],
-            mode: 'dropdown',
-          },
-        },
+            mode: 'dropdown'
+          }
+        }
       },
       {
-        name: 'forecast_rows',
-        selector: { number: { min: 1, max: 10, mode: 'box' } },
-      },
-    ],
+        name: 'day_forecast_columns',
+        selector: { number: { min: 1, max: 10, mode: 'box' } }
+      }
+    ]
   },
   {
     name: '',
@@ -115,17 +115,17 @@ const SCHEMA = [
     schema: [
       {
         name: 'icon_size',
-        selector: { number: { min: 20, max: 200, unit_of_measurement: 'px', mode: 'box' } },
+        selector: { number: { min: 20, max: 200, unit_of_measurement: 'px', mode: 'box' } }
       },
       {
         name: 'hero_gap',
-        selector: { number: { min: 0, max: 50, unit_of_measurement: 'px', mode: 'box' } },
+        selector: { number: { min: 0, max: 50, unit_of_measurement: 'px', mode: 'box' } }
       },
       {
         name: 'sub_font_size',
-        selector: { number: { min: 0.5, max: 5, step: 0.1, unit_of_measurement: 'rem', mode: 'box' } },
-      },
-    ],
+        selector: { number: { min: 0.5, max: 5, step: 0.1, unit_of_measurement: 'rem', mode: 'box' } }
+      }
+    ]
   },
   {
     name: '',
@@ -133,35 +133,39 @@ const SCHEMA = [
     schema: [
       {
         name: 'hourly_forecast',
-        selector: { boolean: {} },
+        selector: { boolean: {} }
       },
       {
-        name: 'show_humidity',
-        selector: { boolean: {} },
+        name: 'hourly_forecast_columns',
+        selector: { number: { min: 1, max: 12, mode: 'box' } }
       },
       {
         name: 'show_decimal',
-        selector: { boolean: {} },
-      },
-    ],
+        selector: { boolean: {} }
+      }
+    ]
   },
   {
     name: '',
     type: 'grid',
     schema: [
       {
+        name: 'show_humidity',
+        selector: { boolean: {} }
+      },
+      {
         name: 'hide_today_section',
-        selector: { boolean: {} },
+        selector: { boolean: {} }
       },
       {
         name: 'hide_forecast_section',
-        selector: { boolean: {} },
+        selector: { boolean: {} }
       },
       {
         name: 'hide_clock',
-        selector: { boolean: {} },
-      },
-    ],
+        selector: { boolean: {} }
+      }
+    ]
   },
   {
     name: '',
@@ -169,18 +173,18 @@ const SCHEMA = [
     schema: [
       {
         name: 'use_browser_time',
-        selector: { boolean: {} },
+        selector: { boolean: {} }
       },
       {
         name: 'locale',
-        selector: { text: {} },
+        selector: { text: {} }
       },
       {
         name: 'time_zone',
-        selector: { text: {} },
-      },
-    ],
-  },
+        selector: { text: {} }
+      }
+    ]
+  }
 ]
 
 const LABELS: Record<string, string> = {
@@ -195,7 +199,8 @@ const LABELS: Record<string, string> = {
   day_name_format: 'Day Name Format',
   time_pattern: 'Time Pattern',
   hero_display: 'Hero Display',
-  forecast_rows: 'Forecast Rows',
+  day_forecast_columns: 'Daily Columns',
+  hourly_forecast_columns: 'Hourly Columns',
   icon_size: 'Icon Size',
   hero_gap: 'Hero Gap',
   sub_font_size: 'Sub Font Size',
@@ -207,7 +212,7 @@ const LABELS: Record<string, string> = {
   hide_clock: 'Hide Clock',
   use_browser_time: 'Use Browser Time',
   locale: 'Locale',
-  time_zone: 'Time Zone',
+  time_zone: 'Time Zone'
 }
 
 @customElement('hass-weather-card-editor')
