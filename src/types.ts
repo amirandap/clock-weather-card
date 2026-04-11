@@ -48,6 +48,10 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   hero_gap?: number
   /** Day name format: 'long' (full name) or 'short' (abbreviated) — default: 'long' */
   day_name_format?: 'long' | 'short'
+  /** Daily forecast icon/element size as percentage (default: 100) */
+  daily_forecast_size?: number
+  /** Hourly forecast icon/element size as percentage (default: 100) */
+  hourly_forecast_size?: number
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -82,6 +86,8 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   icon_size: number
   hero_gap: number
   day_name_format: 'long' | 'short'
+  daily_forecast_size: number
+  hourly_forecast_size: number
 }
 
 export const enum WeatherEntityFeature {

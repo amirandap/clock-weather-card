@@ -284,18 +284,38 @@ ha-card[data-theme="dusk-foggy"] {
     transition: opacity 1.4s ease;
   }
 
-  /* Clouds: full-card overlay like rain, opacity kept low so stars/sky show through */
+  /* Row 1: upper clouds, shifted left for natural variety */
   #lottieCanvasClouds {
-    inset: 0;
-    width:  100%;
-    height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65%;
+    transform: translateX(-10%);
   }
 
-  /* Rain: full-card overlay */
+  /* Row 2: overlapping lower clouds, shifted right for depth parallax */
+  #lottieCanvasClouds2 {
+    top: 28%;
+    left: 0;
+    width: 100%;
+    height: 65%;
+    transform: translateX(12%);
+  }
+
+  /* Rain row 1 */
   #lottieCanvasRain {
     inset: 0;
-    width:  100%;
+    width: 100%;
     height: 100%;
+    transform: translateX(-7%);
+  }
+
+  /* Rain row 2: offset for layered density */
+  #lottieCanvasRain2 {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(9%);
   }
 
   /* Wind streaks: sky + city horizon band */
@@ -306,9 +326,11 @@ ha-card[data-theme="dusk-foggy"] {
     height: 65%;
   }
 
-  #lottieCanvasClouds.is-visible { opacity: 0.30; }
-  #lottieCanvasRain.is-visible   { opacity: 0.65; }
-  #lottieCanvasWind.is-visible   { opacity: 0.48; }
+  #lottieCanvasClouds.is-visible  { opacity: 0.28; }
+  #lottieCanvasClouds2.is-visible { opacity: 0.22; }
+  #lottieCanvasRain.is-visible    { opacity: 0.55; }
+  #lottieCanvasRain2.is-visible   { opacity: 0.45; }
+  #lottieCanvasWind.is-visible    { opacity: 0.48; }
 
   /* ── Weather icon (inside card, responsive) */
   .icon-main {
@@ -346,12 +368,30 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .temp {
-    font-size: clamp(3.2rem, 23cqw, 6.5rem);
+    font-size: clamp(3.7rem, 26cqw, 7.5rem);
     font-weight: 900;
     color: var(--color-text-primary);
     line-height: 1;
     letter-spacing: -0.04em;
     margin: 0;
+  }
+
+  /* ── Hero right-side panel: icon stacked above temperature ── */
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .hero-right__temp {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-align: center;
   }
 
   .condition {

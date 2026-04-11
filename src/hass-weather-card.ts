@@ -130,6 +130,8 @@ export class HassWeatherCard extends LitElement {
   private _lottieCloud?: DotLottie
   private _lottieRain?: DotLottie
   private _lottieWind?: DotLottie
+  private _lottieCloud2?: DotLottie
+  private _lottieRain2?: DotLottie
   private currentDateInterval?: ReturnType<typeof setInterval>
 
   constructor () {
@@ -214,14 +216,17 @@ export class HassWeatherCard extends LitElement {
   private initLottie (): void {
     const haCard = this.shadowRoot?.querySelector('ha-card')
     const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
+    const canvasClouds2 = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds2')
     const canvasRain = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
+    const canvasRain2 = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain2')
     const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain || !haCard) return
 
     // Set canvas drawing buffer to full card dimensions
     const w = haCard.clientWidth || 460
     const h = haCard.clientHeight || 560
-    canvasClouds.width = w; canvasClouds.height = h
+    const rowH = Math.round(h * 0.65)
+    canvasClouds.width = w; canvasClouds.height = rowH
     canvasRain.width = w; canvasRain.height = h
 
     this._lottieCloud = new DotLottie({
@@ -240,6 +245,28 @@ export class HassWeatherCard extends LitElement {
       renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
 
+    if (canvasClouds2) {
+      canvasClouds2.width = w; canvasClouds2.height = rowH
+      this._lottieCloud2 = new DotLottie({
+        canvas: canvasClouds2,
+        src: CLOUDS_LOTTIE,
+        loop: true,
+        autoplay: true,
+        renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+      })
+    }
+
+    if (canvasRain2) {
+      canvasRain2.width = w; canvasRain2.height = h
+      this._lottieRain2 = new DotLottie({
+        canvas: canvasRain2,
+        src: RAIN_LOTTIE,
+        loop: true,
+        autoplay: true,
+        renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+      })
+    }
+
     if (canvasWind) {
       canvasWind.width = w
       canvasWind.height = Math.round(h * 0.65)
@@ -255,7 +282,9 @@ export class HassWeatherCard extends LitElement {
 
   private updateLottie (group: string): void {
     const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
+    const canvasClouds2 = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds2')
     const canvasRain = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
+    const canvasRain2 = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain2')
     const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain) return
 
@@ -264,11 +293,15 @@ export class HassWeatherCard extends LitElement {
     const showWind = LOTTIE_WIND_GROUPS.has(group)
 
     canvasClouds.classList.toggle('is-visible', showClouds)
+    canvasClouds2?.classList.toggle('is-visible', showClouds)
     canvasRain.classList.toggle('is-visible', showRain)
+    canvasRain2?.classList.toggle('is-visible', showRain)
     canvasWind?.classList.toggle('is-visible', showWind)
 
-    // CSS filter tints the cloud canvas to match the sky mood
-    canvasClouds.style.filter = CLOUD_FILTER[group] ?? 'none'
+    // CSS filter tints the cloud canvases to match the sky mood
+    const cloudFilter = CLOUD_FILTER[group] ?? 'none'
+    canvasClouds.style.filter = cloudFilter
+    if (canvasClouds2) canvasClouds2.style.filter = cloudFilter
 
     // Use actual wind_speed from weather entity when available for cloud/wind speed
     const weather = this.hass?.states?.[this.config?.entity]
@@ -277,16 +310,22 @@ export class HassWeatherCard extends LitElement {
     const windKmh = typeof wAttrs.wind_speed === 'number' ? wAttrs.wind_speed : undefined
 
     // Playback speed: use real wind data or fall back to condition-based lookup
+    // Row 2 runs at 72% speed for a parallax depth effect
     if (windKmh !== undefined) {
       // Scale: 0 km/h → 0.3x, 30 km/h → 1.0x, 80+ km/h → 2.5x
       const windFactor = Math.min(2.5, 0.3 + (windKmh / 30) * 0.7)
       this._lottieCloud?.setSpeed(windFactor)
+      this._lottieCloud2?.setSpeed(windFactor * 0.72)
       if (showWind) this._lottieWind?.setSpeed(windFactor * 1.2)
     } else {
-      this._lottieCloud?.setSpeed(CLOUD_SPEED[group] ?? 1.0)
+      const baseSpeed = CLOUD_SPEED[group] ?? 1.0
+      this._lottieCloud?.setSpeed(baseSpeed)
+      this._lottieCloud2?.setSpeed(baseSpeed * 0.72)
       if (showWind) this._lottieWind?.setSpeed(1.8)
     }
-    if (showRain) this._lottieRain?.setSpeed(RAIN_SPEED[group] ?? 1.0)
+    const rainSpeed = RAIN_SPEED[group] ?? 1.0
+    if (showRain) this._lottieRain?.setSpeed(rainSpeed)
+    if (showRain) this._lottieRain2?.setSpeed(rainSpeed * 0.80)
   }
 
   // ── SVG scene background ────────────────────────────────────────────
@@ -407,7 +446,9 @@ export class HassWeatherCard extends LitElement {
         <!-- Full-card lottie BG, z-index 0 -->
         <div class="lottie-layer" aria-hidden="true">
           <canvas id="lottieCanvasClouds"></canvas>
+          <canvas id="lottieCanvasClouds2"></canvas>
           <canvas id="lottieCanvasRain"></canvas>
+          <canvas id="lottieCanvasRain2"></canvas>
           <canvas id="lottieCanvasWind"></canvas>
         </div>
 
@@ -450,7 +491,9 @@ export class HassWeatherCard extends LitElement {
     }
     void this.unsubscribeForecastEvents()
     this._lottieCloud?.destroy()
+    this._lottieCloud2?.destroy()
     this._lottieRain?.destroy()
+    this._lottieRain2?.destroy()
     this._lottieWind?.destroy()
   }
 
@@ -489,10 +532,13 @@ export class HassWeatherCard extends LitElement {
       <div class="hero">
         <div class="hero-top">
           <p class="temp">${heroMain}</p>
-          <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
+          <div class="hero-right">
+            <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
+            ${isTimeHero ? html`<span class="hero-right__temp">${localizedTemp}</span>` : ''}
+          </div>
         </div>
         <span class="condition" style="font-size:${subSize}">${weatherString}</span>
-        ${metaSub !== null ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
+        ${(!isTimeHero && metaSub !== null) ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
         ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
         ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
       </div>
@@ -505,18 +551,21 @@ export class HassWeatherCard extends LitElement {
     const cols = this.config.hourly_forecast_columns
     const entityTempUnit = this.getWeather().attributes.temperature_unit
     const items = this.mergeForecasts(cols, true, this.hourlyForecasts ?? [])
+    const iconBase = 38
+    const iconSz = Math.round(iconBase * (this.config.hourly_forecast_size / 100))
     return html`
       <div class="forecast-hourly">
         ${items.map(f => safeRender(() => {
           const icon = this.toIcon(f.condition, this.config.weather_icon_type, false, this.getIconAnimationKind())
           const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
+          const timeLabel = this.toZonedDate(f.datetime).toFormat('h a')
           const precip = f.precipitation_probability != null && f.precipitation_probability > 0
             ? html`<span class="hour-slot__precip">${Math.round(f.precipitation_probability)}%</span>`
             : ''
           return html`
             <div class="hour-slot">
-              <span class="hour-slot__time">${this.time(f.datetime)}</span>
-              <img class="hour-slot__icon" src=${icon} alt="" />
+              <span class="hour-slot__time">${timeLabel}</span>
+              <img class="hour-slot__icon" style="width:${iconSz}px;height:${iconSz}px" src=${icon} alt="" />
               <span class="hour-slot__temp">${temp}</span>
               ${precip}
             </div>
@@ -534,6 +583,8 @@ export class HassWeatherCard extends LitElement {
     const items = allItems.filter(f => f.datetime >= tomorrowStart).slice(0, cols)
     const entityTempUnit = this.getWeather().attributes.temperature_unit
     const isLong = this.config.day_name_format === 'long'
+    const iconBase = 36
+    const iconSz = Math.round(iconBase * (this.config.daily_forecast_size / 100))
     return html`
       <div class="forecast-daily" style="--daily-cols: ${items.length}">
         ${items.map(f => safeRender(() => {
@@ -544,7 +595,7 @@ export class HassWeatherCard extends LitElement {
             : this.localize(`day.${f.datetime.weekday}`)
           return html`
             <div class="forecast-slot">
-              <img class="forecast-slot__icon" src=${icon} alt="" />
+              <img class="forecast-slot__icon" style="width:${iconSz}px;height:${iconSz}px" src=${icon} alt="" />
               <span class="forecast-slot__temp">${temp}</span>
               <span class="forecast-slot__day">${day}</span>
             </div>
@@ -581,7 +632,7 @@ export class HassWeatherCard extends LitElement {
       hourly_forecast: config.hourly_forecast ?? false,
       animated_icon: config.animated_icon ?? true,
       time_format: config.time_format?.toString() as '12' | '24' | undefined ?? '12',
-      time_pattern: config.time_pattern ?? undefined,
+      time_pattern: config.time_pattern ?? 'h:mm',
       show_humidity: config.show_humidity ?? false,
       hide_forecast_section: config.hide_forecast_section ?? false,
       hide_today_section: config.hide_today_section ?? false,
@@ -593,11 +644,13 @@ export class HassWeatherCard extends LitElement {
       show_decimal: config.show_decimal ?? false,
       apparent_sensor: config.apparent_sensor ?? undefined,
       aqi_sensor: config.aqi_sensor ?? undefined,
-      hero_display: config.hero_display ?? 'temperature',
+      hero_display: config.hero_display ?? 'time',
       sub_font_size: config.sub_font_size ?? 1.7,
       icon_size: config.icon_size ?? 90,
       hero_gap: config.hero_gap ?? 8,
-      day_name_format: config.day_name_format ?? 'long'
+      day_name_format: config.day_name_format ?? 'long',
+      daily_forecast_size: config.daily_forecast_size ?? 100,
+      hourly_forecast_size: config.hourly_forecast_size ?? 100
     }
   }
 

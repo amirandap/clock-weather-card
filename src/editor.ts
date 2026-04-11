@@ -154,6 +154,20 @@ const SCHEMA = [
     type: 'grid',
     schema: [
       {
+        name: 'daily_forecast_size',
+        selector: { number: { min: 50, max: 200, unit_of_measurement: '%', mode: 'slider' } }
+      },
+      {
+        name: 'hourly_forecast_size',
+        selector: { number: { min: 50, max: 200, unit_of_measurement: '%', mode: 'slider' } }
+      }
+    ]
+  },
+  {
+    name: '',
+    type: 'grid',
+    schema: [
+      {
         name: 'show_humidity',
         selector: { boolean: {} }
       },
@@ -206,6 +220,8 @@ const LABELS: Record<string, string> = {
   hero_display: 'Hero Display',
   day_forecast_columns: 'Daily Columns',
   hourly_forecast_columns: 'Hourly Columns',
+  daily_forecast_size: 'Daily Forecast Size',
+  hourly_forecast_size: 'Hourly Forecast Size',
   icon_size: 'Icon Size',
   hero_gap: 'Hero Gap',
   sub_font_size: 'Sub Font Size',
