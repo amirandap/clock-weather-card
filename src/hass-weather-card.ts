@@ -453,7 +453,7 @@ export class HassWeatherCard extends LitElement {
         </div>
 
         <!-- All text content, z-index 2 -->
-        <div class="card-body">
+        <div class="card-body" style="padding: ${this.config.card_padding}px">
           ${this.config.hide_today_section ? '' : safeRender(() => this.renderHero())}
           ${showForecast
             ? html`
@@ -530,12 +530,10 @@ export class HassWeatherCard extends LitElement {
 
     return html`
       <div class="hero">
-        <div class="hero-top">
-          <p class="temp">${heroMain}</p>
-          <div class="hero-right">
-            <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-            ${isTimeHero ? html`<span class="hero-right__temp">${localizedTemp}</span>` : ''}
-          </div>
+        <p class="temp">${heroMain}</p>
+        <div class="hero-right">
+          <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
+          ${isTimeHero ? html`<span class="hero-right__temp">${localizedTemp}</span>` : ''}
         </div>
         <span class="condition" style="font-size:${subSize}">${weatherString}</span>
         ${(!isTimeHero && metaSub !== null) ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
@@ -650,7 +648,8 @@ export class HassWeatherCard extends LitElement {
       hero_gap: config.hero_gap ?? 8,
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,
-      hourly_forecast_size: config.hourly_forecast_size ?? 100
+      hourly_forecast_size: config.hourly_forecast_size ?? 100,
+      card_padding: config.card_padding ?? 16
     }
   }
 

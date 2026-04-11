@@ -346,26 +346,24 @@ ha-card[data-theme="dusk-foggy"] {
     position: relative;
     z-index: 2;
     overflow: visible;
-    padding: 24px 24px 20px;
+    /* padding driven by config.card_padding inline style; this is the fallback */
+    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
 
-  /* ── Hero: temp + icon top row, condition full-width below */
+  /* ── Hero: 2-column grid — big temp left | icon+temp right, condition spans both */
   .hero {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    row-gap: 4px;
+    column-gap: 12px;
+    margin-top: 4px;
   }
 
-  .hero-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-  }
+  /* hero-top wrapper removed — .temp and .hero-right are direct grid children */
 
   .temp {
     font-size: clamp(3.7rem, 26cqw, 7.5rem);
@@ -374,6 +372,7 @@ ha-card[data-theme="dusk-foggy"] {
     line-height: 1;
     letter-spacing: -0.04em;
     margin: 0;
+    /* column 1, auto row */
   }
 
   /* ── Hero right-side panel: icon stacked above temperature ── */
@@ -382,7 +381,7 @@ ha-card[data-theme="dusk-foggy"] {
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    flex-shrink: 0;
+    /* column 2, auto row — aligns with .temp */
   }
 
   .hero-right__temp {
@@ -395,6 +394,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .condition {
+    grid-column: 1 / -1;  /* spans both columns */
     font-size: 1.5rem;
     font-weight: 800;
     color: var(--color-text-primary);
@@ -406,6 +406,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .hero-meta {
+    grid-column: 1 / -1;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-text-secondary);
@@ -413,6 +414,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .current-time {
+    grid-column: 1 / -1;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--color-text-secondary);
@@ -435,7 +437,7 @@ ha-card[data-theme="dusk-foggy"] {
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(0, 0, 0, 0.12);
     border-radius: 10px;
-    padding: 10px 4px;
+    padding: 6px 2px;
     margin-top: 8px;
     overflow: hidden;
   }
