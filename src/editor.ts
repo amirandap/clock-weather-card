@@ -164,6 +164,10 @@ const SCHEMA = [
       {
         name: 'card_padding',
         selector: { number: { min: 0, max: 48, unit_of_measurement: 'px', mode: 'slider' } }
+      },
+      {
+        name: 'hourly_time_font_size',
+        selector: { number: { min: 0.5, max: 2, step: 0.05, unit_of_measurement: 'rem', mode: 'slider' } }
       }
     ]
   },
@@ -227,6 +231,7 @@ const LABELS: Record<string, string> = {
   daily_forecast_size: 'Daily Forecast Size',
   hourly_forecast_size: 'Hourly Forecast Size',
   card_padding: 'Card Padding',
+  hourly_time_font_size: 'Hourly Time Font Size',
   icon_size: 'Icon Size',
   hero_gap: 'Hero Gap',
   sub_font_size: 'Sub Font Size',

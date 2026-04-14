@@ -54,6 +54,8 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   hourly_forecast_size?: number
   /** Card body padding in px (default: 16) */
   card_padding?: number
+  /** Hour-slot time label font size in rem (default: 0.9) */
+  hourly_time_font_size?: number
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -91,6 +93,7 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   daily_forecast_size: number
   hourly_forecast_size: number
   card_padding: number
+  hourly_time_font_size: number
 }
 
 export const enum WeatherEntityFeature {

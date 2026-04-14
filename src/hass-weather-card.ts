@@ -552,7 +552,7 @@ export class HassWeatherCard extends LitElement {
     const iconBase = 38
     const iconSz = Math.round(iconBase * (this.config.hourly_forecast_size / 100))
     return html`
-      <div class="forecast-hourly">
+      <div class="forecast-hourly" style="--hourly-time-font-size: ${this.config.hourly_time_font_size}rem">
         ${items.map(f => safeRender(() => {
           const icon = this.toIcon(f.condition, this.config.weather_icon_type, false, this.getIconAnimationKind())
           const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
@@ -649,7 +649,8 @@ export class HassWeatherCard extends LitElement {
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,
       hourly_forecast_size: config.hourly_forecast_size ?? 100,
-      card_padding: config.card_padding ?? 16
+      card_padding: config.card_padding ?? 16,
+      hourly_time_font_size: config.hourly_time_font_size ?? 0.9
     }
   }
 

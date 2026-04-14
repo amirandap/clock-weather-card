@@ -448,11 +448,11 @@ ha-card[data-theme="dusk-foggy"] {
     align-items: center;
     gap: 3px;
     flex: 1;
-    padding: 4px 2px;
+    padding: 2px 1px;
   }
 
   .hour-slot__time {
-    font-size: 0.75rem;
+    font-size: var(--hourly-time-font-size, 0.9rem);
     font-weight: 700;
     text-transform: uppercase;
     color: var(--color-text-secondary);
