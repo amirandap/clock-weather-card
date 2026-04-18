@@ -347,20 +347,20 @@ ha-card[data-theme="dusk-foggy"] {
     z-index: 2;
     overflow: visible;
     /* padding driven by config.card_padding inline style; this is the fallback */
-    padding: 20px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
   }
 
   /* ── Hero: 2-column grid — big temp left | icon+temp right, condition spans both */
   .hero {
     display: grid;
     grid-template-columns: 1fr auto;
-    align-items: center;
-    row-gap: 4px;
+    align-items: start;
+    row-gap: 2px;
     column-gap: 12px;
-    margin-top: 4px;
+    margin-top: 0;
   }
 
   /* hero-top wrapper removed — .temp and .hero-right are direct grid children */
@@ -438,7 +438,7 @@ ha-card[data-theme="dusk-foggy"] {
     background: rgba(0, 0, 0, 0.12);
     border-radius: 10px;
     padding: 6px 2px;
-    margin-top: 8px;
+    margin-top: 4px;
     overflow: hidden;
   }
 
@@ -452,7 +452,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .hour-slot__time {
-    font-size: var(--hourly-time-font-size, 0.9rem);
+    font-size: var(--hourly-time-font-size, 0.65rem);
     font-weight: 700;
     text-transform: uppercase;
     color: var(--color-text-secondary);
@@ -481,8 +481,8 @@ ha-card[data-theme="dusk-foggy"] {
     display: grid;
     grid-template-columns: repeat(var(--daily-cols, 4), 1fr);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 12px;
-    margin-top: 8px;
+    padding-top: 8px;
+    margin-top: 4px;
     overflow: hidden;
   }
 

@@ -470,14 +470,14 @@ export class ClockWeatherCard extends LitElement {
       aqi_sensor: config.aqi_sensor ?? undefined,
       hero_display: config.hero_display ?? 'temperature',
       sub_font_size: config.sub_font_size ?? 1.7,
-      icon_size: config.icon_size ?? 90,
+      icon_size: config.icon_size ?? 72,
       hero_gap: config.hero_gap ?? 8,
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,
       hourly_forecast_size: config.hourly_forecast_size ?? 100,
-      card_padding: config.card_padding ?? 16,
+      card_padding: config.card_padding ?? 12,
       hourly_padding: config.hourly_padding ?? 6,
-      hourly_time_font_size: config.hourly_time_font_size ?? 0.9
+      hourly_time_font_size: config.hourly_time_font_size ?? 0.65
     }
   }
 
