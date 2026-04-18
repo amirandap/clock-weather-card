@@ -6,6 +6,8 @@ on:
 
 jobs:
   build:
+    # Skip version-bump commits from the auto-release workflow
+    if: "!contains(github.event.head_commit.message, 'chore: bump version')"
     name: yarn
     runs-on: ubuntu-latest
     steps:
