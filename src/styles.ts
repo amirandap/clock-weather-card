@@ -353,14 +353,29 @@ ha-card[data-theme="dusk-foggy"] {
     gap: 8px;
   }
 
-  /* ── Hero: 2-column grid — big temp left | icon+temp right, condition spans both */
+  /* ── Hero: flex column, matching v2 concept layout */
   .hero {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-    row-gap: 2px;
-    column-gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     margin-top: 0;
+  }
+
+  /* Time row: big clock left, icon right */
+  .hero-time-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Info row: condition left, temp right — like v2 widget__info-row */
+  .hero-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 2px;
   }
 
   /* hero-top wrapper removed — .temp and .hero-right are direct grid children */
@@ -372,73 +387,57 @@ ha-card[data-theme="dusk-foggy"] {
     line-height: 1;
     letter-spacing: -0.04em;
     margin: 0;
-    /* column 1, auto row */
-  }
-
-  /* ── Hero right-side panel: icon stacked above temperature ── */
-  .hero-right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    /* column 2, auto row — aligns with .temp */
-  }
-
-  .hero-right__temp {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    text-align: center;
   }
 
   .condition {
-    grid-column: 1 / -1;  /* spans both columns */
-    font-size: 1.5rem;
+    font-size: 1.28rem;
     font-weight: 800;
     color: var(--color-text-primary);
-    line-height: 1.2;
+    line-height: 1.1;
     letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
+  /* Temperature shown inline with condition in info row */
+  .hero-temp-inline {
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   .hero-meta {
-    grid-column: 1 / -1;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     line-height: 1.3;
   }
 
-  .current-time {
-    grid-column: 1 / -1;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-text-secondary);
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-
-  /* ── Forecast strips (v1 layout) */
+  /* ── Forecast panel: frosted glass pushed to bottom — matches v2 widget__panel */
   .forecast-section {
     display: flex;
     flex-direction: column;
     gap: 0;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    overflow: hidden;
+    margin-top: 4px;
   }
 
   .forecast-hourly {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.12);
-    border-radius: 10px;
-    padding: 6px 2px;
-    margin-top: 4px;
+    align-items: center;
+    padding: 12px 8px 8px;
     overflow: hidden;
   }
 
@@ -480,9 +479,7 @@ ha-card[data-theme="dusk-foggy"] {
   .forecast-daily {
     display: grid;
     grid-template-columns: repeat(var(--daily-cols, 4), 1fr);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 8px;
-    margin-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
     overflow: hidden;
   }
 
@@ -490,14 +487,14 @@ ha-card[data-theme="dusk-foggy"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 0 4px;
+    gap: 6px;
+    padding: 10px 4px;
     min-width: 0;
     overflow: hidden;
   }
 
   .forecast-slot:not(:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .forecast-slot__icon {

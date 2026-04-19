@@ -530,13 +530,14 @@ export class HassWeatherCard extends LitElement {
 
     return html`
       <div class="hero">
-        <p class="temp">${heroMain}</p>
-        <div class="hero-right">
+        <div class="hero-time-row">
+          <p class="temp">${heroMain}</p>
           <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-          ${isTimeHero ? html`<span class="hero-right__temp">${localizedTemp}</span>` : ''}
         </div>
-        <span class="condition" style="font-size:${subSize}">${weatherString}</span>
-        ${(!isTimeHero && metaSub !== null) ? html`<span class="current-time" style="font-size:${subSize}">${metaSub}</span>` : ''}
+        <div class="hero-info-row">
+          <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+          <span class="hero-temp-inline" style="font-size:${subSize}">${isTimeHero ? localizedTemp : (metaSub ?? '')}</span>
+        </div>
         ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
         ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
       </div>
@@ -547,7 +548,6 @@ export class HassWeatherCard extends LitElement {
 
   private renderHourlyStrip (): TemplateResult {
     const cols = this.config.hourly_forecast_columns
-    const entityTempUnit = this.getWeather().attributes.temperature_unit
     const items = this.mergeForecasts(cols, true, this.hourlyForecasts ?? [])
     const iconBase = 38
     const iconSz = Math.round(iconBase * (this.config.hourly_forecast_size / 100))
@@ -555,7 +555,6 @@ export class HassWeatherCard extends LitElement {
       <div class="forecast-hourly" style="--hourly-time-font-size: ${this.config.hourly_time_font_size}rem; padding-top: ${this.config.hourly_padding}px; padding-bottom: ${this.config.hourly_padding}px">
         ${items.map(f => safeRender(() => {
           const icon = this.toIcon(f.condition, this.config.weather_icon_type, false, this.getIconAnimationKind())
-          const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
           const timeLabel = this.toZonedDate(f.datetime).toFormat('h a')
           const precip = f.precipitation_probability != null && f.precipitation_probability > 0
             ? html`<span class="hour-slot__precip">${Math.round(f.precipitation_probability)}%</span>`
@@ -563,7 +562,6 @@ export class HassWeatherCard extends LitElement {
           return html`
             <div class="hour-slot">
               <img class="hour-slot__icon" style="width:${iconSz}px;height:${iconSz}px" src=${icon} alt="" />
-              <span class="hour-slot__temp">${temp}</span>
               <span class="hour-slot__time">${timeLabel}</span>
               ${precip}
             </div>

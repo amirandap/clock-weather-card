@@ -405,14 +405,29 @@ ha-card[data-theme="dusk-foggy"] {
     gap: 8px;
   }
 
-  /* ── Hero: 2-column grid — big temp left | icon+temp right, condition spans both */
+  /* ── Hero: flex column, matching v2 concept layout */
   .hero {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-    row-gap: 2px;
-    column-gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     margin-top: 0;
+  }
+
+  /* Time row: big clock left, icon right */
+  .hero-time-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Info row: condition left, temp right — like v2 widget__info-row */
+  .hero-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 2px;
   }
 
   /* hero-top wrapper removed — .temp and .hero-right are direct grid children */
@@ -424,73 +439,57 @@ ha-card[data-theme="dusk-foggy"] {
     line-height: 1;
     letter-spacing: -0.04em;
     margin: 0;
-    /* column 1, auto row */
-  }
-
-  /* ── Hero right-side panel: icon stacked above temperature ── */
-  .hero-right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    /* column 2, auto row — aligns with .temp */
-  }
-
-  .hero-right__temp {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    text-align: center;
   }
 
   .condition {
-    grid-column: 1 / -1;  /* spans both columns */
-    font-size: 1.5rem;
+    font-size: 1.28rem;
     font-weight: 800;
     color: var(--color-text-primary);
-    line-height: 1.2;
+    line-height: 1.1;
     letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
+  /* Temperature shown inline with condition in info row */
+  .hero-temp-inline {
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   .hero-meta {
-    grid-column: 1 / -1;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     line-height: 1.3;
   }
 
-  .current-time {
-    grid-column: 1 / -1;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-text-secondary);
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-
-  /* ── Forecast strips (v1 layout) */
+  /* ── Forecast panel: frosted glass pushed to bottom — matches v2 widget__panel */
   .forecast-section {
     display: flex;
     flex-direction: column;
     gap: 0;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    overflow: hidden;
+    margin-top: 4px;
   }
 
   .forecast-hourly {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.12);
-    border-radius: 10px;
-    padding: 6px 2px;
-    margin-top: 4px;
+    align-items: center;
+    padding: 12px 8px 8px;
     overflow: hidden;
   }
 
@@ -532,9 +531,7 @@ ha-card[data-theme="dusk-foggy"] {
   .forecast-daily {
     display: grid;
     grid-template-columns: repeat(var(--daily-cols, 4), 1fr);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 8px;
-    margin-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
     overflow: hidden;
   }
 
@@ -542,14 +539,14 @@ ha-card[data-theme="dusk-foggy"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 0 4px;
+    gap: 6px;
+    padding: 10px 4px;
     min-width: 0;
     overflow: hidden;
   }
 
   .forecast-slot:not(:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .forecast-slot__icon {
@@ -616,24 +613,24 @@ ha-card[data-theme="dusk-foggy"] {
       </ha-card>
     `}connectedCallback(){if(super.connectedCallback(),!this.currentDateInterval){this.currentDate=gl.now();const e=1e3-this.currentDate.millisecond;setTimeout((()=>{this.currentDate=gl.now(),this.currentDateInterval=setInterval((()=>{this.currentDate=gl.now()}),1e3)}),e)}this.hasUpdated&&this.subscribeForecastEvents()}disconnectedCallback(){var e,t,i,r,a;super.disconnectedCallback(),this.currentDateInterval&&(clearInterval(this.currentDateInterval),this.currentDateInterval=void 0),this.unsubscribeForecastEvents(),null===(e=this._lottieCloud)||void 0===e||e.destroy(),null===(t=this._lottieCloud2)||void 0===t||t.destroy(),null===(i=this._lottieRain)||void 0===i||i.destroy(),null===(r=this._lottieRain2)||void 0===r||r.destroy(),null===(a=this._lottieWind)||void 0===a||a.destroy()}willUpdate(e){super.willUpdate(e),this.forecastSubscriber||this.forecastSubscriberHourly||this.subscribeForecastEvents()}renderHero(){const e=this.getWeather(),t=this.config.show_decimal?this.getCurrentTemperature():null===(i=this.getCurrentTemperature())?null:Math.round(i);var i;const r=e.attributes.temperature_unit,a=this.localize(`weather.${e.state}`),n=null!==t?this.toConfiguredTempWithUnit(r,t):"n/a",s=`${this.config.sub_font_size}rem`,o=this.config.weather_icon_type,l=this.toIcon(e.state,o,!1,this.getIconAnimationKind()),c=`${this.config.icon_size}px`,d="time"===this.config.hero_display,h=!this.config.hide_clock,u=d&&h?this.time():n,m=d&&h?n:h?this.time():null,f=this.config.show_humidity?this.getCurrentHumidity():null,p=this.getApparentTemperature();return U`
       <div class="hero">
-        <p class="temp">${u}</p>
-        <div class="hero-right">
+        <div class="hero-time-row">
+          <p class="temp">${u}</p>
           <img class="icon-main" style="width:${c};height:${c}" src=${l} />
-          ${d?U`<span class="hero-right__temp">${n}</span>`:""}
         </div>
-        <span class="condition" style="font-size:${s}">${a}</span>
-        ${d||null===m?"":U`<span class="current-time" style="font-size:${s}">${m}</span>`}
+        <div class="hero-info-row">
+          <span class="condition" style="font-size:${s}">${a}</span>
+          <span class="hero-temp-inline" style="font-size:${s}">${d?n:null!=m?m:""}</span>
+        </div>
         ${null!==f?U`<span class="hero-meta" style="font-size:calc(${s} * 0.75)">${this.localize("ui.card.weather.attributes.humidity")}: ${f}%</span>`:""}
         ${null!==p?U`<span class="hero-meta" style="font-size:calc(${s} * 0.75)">${this.localize("ui.card.weather.attributes.apparent_temperature")}: ${this.toConfiguredTempWithUnit(r,p)}</span>`:""}
       </div>
-    `}renderHourlyStrip(){var e;const t=this.config.hourly_forecast_columns,i=this.getWeather().attributes.temperature_unit,r=this.mergeForecasts(t,!0,null!==(e=this.hourlyForecasts)&&void 0!==e?e:[]),a=Math.round(this.config.hourly_forecast_size/100*38);return U`
+    `}renderHourlyStrip(){var e;const t=this.config.hourly_forecast_columns,i=this.mergeForecasts(t,!0,null!==(e=this.hourlyForecasts)&&void 0!==e?e:[]),r=Math.round(this.config.hourly_forecast_size/100*38);return U`
       <div class="forecast-hourly" style="--hourly-time-font-size: ${this.config.hourly_time_font_size}rem; padding-top: ${this.config.hourly_padding}px; padding-bottom: ${this.config.hourly_padding}px">
-        ${r.map((e=>Kr((()=>{const t=this.toIcon(e.condition,this.config.weather_icon_type,!1,this.getIconAnimationKind()),r=this.toConfiguredTempWithUnit(i,Math.round(e.temperature)),n=this.toZonedDate(e.datetime).toFormat("h a"),s=null!=e.precipitation_probability&&e.precipitation_probability>0?U`<span class="hour-slot__precip">${Math.round(e.precipitation_probability)}%</span>`:"";return U`
+        ${i.map((e=>Kr((()=>{const t=this.toIcon(e.condition,this.config.weather_icon_type,!1,this.getIconAnimationKind()),i=this.toZonedDate(e.datetime).toFormat("h a"),a=null!=e.precipitation_probability&&e.precipitation_probability>0?U`<span class="hour-slot__precip">${Math.round(e.precipitation_probability)}%</span>`:"";return U`
             <div class="hour-slot">
-              <img class="hour-slot__icon" style="width:${a}px;height:${a}px" src=${t} alt="" />
-              <span class="hour-slot__temp">${r}</span>
-              <span class="hour-slot__time">${n}</span>
-              ${s}
+              <img class="hour-slot__icon" style="width:${r}px;height:${r}px" src=${t} alt="" />
+              <span class="hour-slot__time">${i}</span>
+              ${a}
             </div>
           `}))))}
       </div>
