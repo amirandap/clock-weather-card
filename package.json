@@ -1,6 +1,6 @@
 {
   "name": "hass-weather-card",
-  "version": "2.23.5",
+  "version": "2.23.6",
   "description": "Lovelace hass-weather-card — animated coastal weather scene for Home Assistant",
   "keywords": [
     "home-assistant",

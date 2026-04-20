@@ -528,18 +528,29 @@ export class HassWeatherCard extends LitElement {
     const humidity = this.config.show_humidity ? this.getCurrentHumidity() : null
     const apparent = this.getApparentTemperature()
 
+    // Temp in icon-block: degree symbol only, no unit letter (e.g. "23°")
+    const convertedTemp = temp !== null ? this.toConfiguredTempWithoutUnit(tempUnit, temp) : null
+    const tempDegree = convertedTemp !== null ? `${convertedTemp}°` : ''
+
+    // What shows in the icon-block meta row (primary value)
+    const iconMetaMain = isTimeHero ? tempDegree : (metaSub ?? '')
+
     return html`
       <div class="hero">
         <div class="hero-main-row">
-          <p class="temp">${heroMain}</p>
+          <div class="hero-left">
+            <p class="temp">${heroMain}</p>
+            <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+          </div>
           <div class="hero-icon-block">
             <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-            <span class="hero-temp-inline" style="font-size:${subSize}">${isTimeHero ? localizedTemp : (metaSub ?? '')}</span>
+            <div class="hero-icon-meta">
+              <span class="hero-temp-inline" style="font-size:${subSize}">${iconMetaMain}</span>
+              ${humidity !== null ? html`<span class="hero-temp-inline" style="font-size:${subSize}">| ${humidity}%</span>` : ''}
+            </div>
           </div>
         </div>
-        <span class="condition" style="font-size:${subSize}">${weatherString}</span>
-        ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
-        ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
+        ${apparent !== null ? html`<span class="hero-meta">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
       </div>
     `
   }

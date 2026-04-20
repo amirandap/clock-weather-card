@@ -361,7 +361,7 @@ ha-card[data-theme="dusk-foggy"] {
     margin-top: 0;
   }
 
-  /* Main row: big clock left, icon+temp stacked right */
+  /* Main row: left column (clock+condition) | right column (icon+meta) */
   .hero-main-row {
     display: flex;
     align-items: flex-start;
@@ -369,7 +369,16 @@ ha-card[data-theme="dusk-foggy"] {
     gap: 8px;
   }
 
-  /* Icon and temperature stacked vertically in top-right */
+  /* Left: clock stacked above condition text */
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* Right: icon stacked above temp°|humidity% row */
   .hero-icon-block {
     display: flex;
     flex-direction: column;
@@ -377,6 +386,14 @@ ha-card[data-theme="dusk-foggy"] {
     gap: 4px;
     flex-shrink: 0;
     padding-top: 4px;
+  }
+
+  /* Temp° and humidity% on same line below icon */
+  .hero-icon-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
   }
 
   .temp {
