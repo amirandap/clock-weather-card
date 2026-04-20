@@ -37,7 +37,7 @@ const SCHEMA = [
   // ── Entities ─────────────────────────────────────────────────────────────
   { name: 'entity', required: true, selector: { entity: { domain: 'weather' } } },
   { name: 'sun_entity', selector: { entity: { domain: 'sun' } } },
-  { name: 'moon_entity', selector: { entity: { domain: 'moon' } } },
+  { name: 'moon_entity', selector: { entity: { domain: ['moon', 'sensor'] } } },
   { name: 'temperature_sensor', selector: { entity: { domain: 'sensor', device_class: 'temperature' } } },
   { name: 'humidity_sensor', selector: { entity: { domain: 'sensor', device_class: 'humidity' } } },
   { name: 'apparent_sensor', selector: { entity: { domain: 'sensor', device_class: 'temperature' } } },
