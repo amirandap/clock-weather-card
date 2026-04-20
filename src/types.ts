@@ -60,6 +60,10 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   hourly_time_font_size?: number
   /** Hide the daily forecast strip (default: false) */
   hide_daily_section?: boolean
+  /** Show temperature in daily forecast slots (default: true) */
+  show_daily_temp?: boolean
+  /** Show temperature in hourly forecast slots (default: false) */
+  show_hourly_temp?: boolean
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -100,6 +104,8 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   hourly_padding: number
   hourly_time_font_size: number
   hide_daily_section: boolean
+  show_daily_temp: boolean
+  show_hourly_temp: boolean
 }
 
 export const enum WeatherEntityFeature {

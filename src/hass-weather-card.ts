@@ -559,9 +559,13 @@ export class HassWeatherCard extends LitElement {
           const precip = f.precipitation_probability != null && f.precipitation_probability > 0
             ? html`<span class="hour-slot__precip">${Math.round(f.precipitation_probability)}%</span>`
             : ''
+          const hourTemp = this.config.show_hourly_temp
+            ? html`<span class="hour-slot__temp">${this.toConfiguredTempWithUnit(this.getWeather().attributes.temperature_unit, Math.round(f.temperature))}</span>`
+            : ''
           return html`
             <div class="hour-slot">
               <img class="hour-slot__icon" style="width:${iconSz}px;height:${iconSz}px" src=${icon} alt="" />
+              ${hourTemp}
               <span class="hour-slot__time">${timeLabel}</span>
               ${precip}
             </div>
@@ -592,7 +596,7 @@ export class HassWeatherCard extends LitElement {
           return html`
             <div class="forecast-slot">
               <img class="forecast-slot__icon" style="width:${iconSz}px;height:${iconSz}px" src=${icon} alt="" />
-              <span class="forecast-slot__temp">${temp}</span>
+              ${this.config.show_daily_temp ? html`<span class="forecast-slot__temp">${temp}</span>` : ''}
               <span class="forecast-slot__day">${day}</span>
             </div>
           `
@@ -647,10 +651,12 @@ export class HassWeatherCard extends LitElement {
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,
       hourly_forecast_size: config.hourly_forecast_size ?? 100,
-      card_padding: config.card_padding ?? 12,
+      card_padding: config.card_padding ?? 8,
       hourly_padding: config.hourly_padding ?? 6,
       hourly_time_font_size: config.hourly_time_font_size ?? 0.65,
-      hide_daily_section: config.hide_daily_section ?? false
+      hide_daily_section: config.hide_daily_section ?? false,
+      show_daily_temp: config.show_daily_temp ?? true,
+      show_hourly_temp: config.show_hourly_temp ?? false
     }
   }
 

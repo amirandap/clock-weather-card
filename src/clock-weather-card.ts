@@ -475,10 +475,12 @@ export class ClockWeatherCard extends LitElement {
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,
       hourly_forecast_size: config.hourly_forecast_size ?? 100,
-      card_padding: config.card_padding ?? 12,
+      card_padding: config.card_padding ?? 8,
       hourly_padding: config.hourly_padding ?? 6,
       hourly_time_font_size: config.hourly_time_font_size ?? 0.65,
-      hide_daily_section: config.hide_daily_section ?? false
+      hide_daily_section: config.hide_daily_section ?? false,
+      show_daily_temp: config.show_daily_temp ?? true,
+      show_hourly_temp: config.show_hourly_temp ?? false
     }
   }
 
