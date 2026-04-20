@@ -617,7 +617,10 @@ export function computeCardGradient (conditionGroup: string, elev: number | unde
  * @param opts       Optional data from HA sun.sun + weather entity attributes
  */
 export function buildBackground (condition: string, period: string, opts: SkyOpts = {}): string {
-  const effectivePeriod = condition === 'clear-night' ? 'night' : period
+  // If weather entity reports 'clear-night' but sun elevation confirms the sun is above the
+  // horizon, trust the elevation-based period instead of forcing a night scene.
+  const sunAboveHorizon = typeof opts.sunElevation === 'number' && opts.sunElevation > 1
+  const effectivePeriod = (condition === 'clear-night' && !sunAboveHorizon) ? 'night' : period
   const group = CONDITION_GROUP[condition] ?? 'cloudy'
 
   const isNight = effectivePeriod === 'night'
