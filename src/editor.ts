@@ -199,78 +199,18 @@ export class HassWeatherCardEditor extends LitElement {
   @state() private _config!: ClockWeatherCardConfig
 
   public setConfig (config: ClockWeatherCardConfig): void {
-    // Spread defaults first so sliders always show a value, then overlay user config
+    // Spread defaults first so sliders always show a value, then overlay user config.
+    // ha-form-expandable passes the FULL flat data to inner ha-form, so no nesting needed.
     const merged: Partial<ClockWeatherCardConfig> = { ...CONFIG_DEFAULTS, ...config }
     this._config = merged as ClockWeatherCardConfig
-  }
-
-  // ── ha-form expandable sections use data[name] as sub-object context.
-  // We must nest the flat config into sub-objects matching section names.
-  private get _formData (): Record<string, unknown> {
-    const empty: Partial<ClockWeatherCardConfig> = {}
-    const c: ClockWeatherCardConfig = this._config ?? (empty as ClockWeatherCardConfig)
-    return {
-      entity: (c as any).entity,
-      sun_entity: (c as any).sun_entity,
-      moon_entity: (c as any).moon_entity,
-      temperature_sensor: (c as any).temperature_sensor,
-      humidity_sensor: (c as any).humidity_sensor,
-      apparent_sensor: (c as any).apparent_sensor,
-      _header: {
-        hide_today_section: c.hide_today_section,
-        hide_clock: c.hide_clock,
-        hide_date: c.hide_date,
-        show_humidity: c.show_humidity,
-        hero_display: c.hero_display,
-        time_format: c.time_format,
-        time_pattern: c.time_pattern,
-        icon_size: c.icon_size,
-        sub_font_size: c.sub_font_size
-      },
-      _hourly: {
-        hourly_forecast: c.hourly_forecast,
-        show_hourly_temp: (c as any).show_hourly_temp,
-        hourly_forecast_columns: c.hourly_forecast_columns,
-        hourly_forecast_size: c.hourly_forecast_size,
-        hourly_padding: c.hourly_padding,
-        hourly_time_font_size: c.hourly_time_font_size
-      },
-      _daily: {
-        hide_daily_section: c.hide_daily_section,
-        hide_forecast_section: c.hide_forecast_section,
-        show_daily_temp: (c as any).show_daily_temp,
-        day_forecast_columns: c.day_forecast_columns,
-        day_name_format: c.day_name_format,
-        daily_forecast_size: c.daily_forecast_size
-      },
-      _overall: {
-        weather_icon_type: c.weather_icon_type,
-        animated_icon: c.animated_icon,
-        show_decimal: c.show_decimal,
-        use_browser_time: c.use_browser_time,
-        card_padding: c.card_padding,
-        locale: (c as any).locale,
-        time_zone: (c as any).time_zone
-      }
-    }
   }
 
   private _computeLabel (schema: { name: string }): string {
     return LABELS[schema.name] ?? schema.name
   }
 
-  // ── Flatten nested expandable data back to flat config before firing event
   private _valueChanged (ev: CustomEvent): void {
-    const d: Record<string, any> = ev.detail.value as Record<string, any>
-    const flat: Record<string, any> = { ...d }
-    for (const section of ['_header', '_hourly', '_daily', '_overall']) {
-      if (flat[section] && typeof flat[section] === 'object') {
-        Object.assign(flat, flat[section])
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete flat[section]
-      }
-    }
-    fireEvent(this, 'config-changed', { config: flat as ClockWeatherCardConfig })
+    fireEvent(this, 'config-changed', { config: ev.detail.value as ClockWeatherCardConfig })
   }
 
   protected render (): TemplateResult {
@@ -281,7 +221,7 @@ export class HassWeatherCardEditor extends LitElement {
     return html`
       <ha-form
         .hass=${this.hass}
-        .data=${this._formData}
+        .data=${this._config}
         .schema=${SCHEMA}
         .computeLabel=${(schema: { name: string }) => this._computeLabel(schema)}
         @value-changed=${(ev: CustomEvent) => { this._valueChanged(ev) }}
