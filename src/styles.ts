@@ -357,25 +357,25 @@ ha-card[data-theme="dusk-foggy"] {
   .hero {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     margin-top: 0;
   }
 
-  /* Time row: big clock left, icon right */
-  .hero-time-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  /* Info row: condition left, temp right — like v2 widget__info-row */
+  /* Info row: [icon + condition] left, temp right */
   .hero-info-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-top: 2px;
+  }
+
+  /* Icon and condition text grouped together */
+  .hero-info-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   /* hero-top wrapper removed — .temp and .hero-right are direct grid children */
@@ -412,7 +412,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .hero-meta {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     line-height: 1.3;

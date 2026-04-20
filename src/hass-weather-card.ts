@@ -459,7 +459,7 @@ export class HassWeatherCard extends LitElement {
             ? html`
             <div class="forecast-section">
               ${(this.config.hourly_forecast && this.hourlyForecasts?.length) ? safeRender(() => this.renderHourlyStrip()) : ''}
-              ${safeRender(() => this.renderDailyStrip())}
+              ${!this.config.hide_daily_section ? safeRender(() => this.renderDailyStrip()) : ''}
             </div>
           `
             : ''}
@@ -530,12 +530,12 @@ export class HassWeatherCard extends LitElement {
 
     return html`
       <div class="hero">
-        <div class="hero-time-row">
-          <p class="temp">${heroMain}</p>
-          <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-        </div>
+        <p class="temp">${heroMain}</p>
         <div class="hero-info-row">
-          <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+          <div class="hero-info-left">
+            <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
+            <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+          </div>
           <span class="hero-temp-inline" style="font-size:${subSize}">${isTimeHero ? localizedTemp : (metaSub ?? '')}</span>
         </div>
         ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
@@ -641,15 +641,16 @@ export class HassWeatherCard extends LitElement {
       apparent_sensor: config.apparent_sensor ?? undefined,
       aqi_sensor: config.aqi_sensor ?? undefined,
       hero_display: config.hero_display ?? 'time',
-      sub_font_size: config.sub_font_size ?? 1.7,
-      icon_size: config.icon_size ?? 72,
+      sub_font_size: config.sub_font_size ?? 1.3,
+      icon_size: config.icon_size ?? 40,
       hero_gap: config.hero_gap ?? 8,
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,
       hourly_forecast_size: config.hourly_forecast_size ?? 100,
       card_padding: config.card_padding ?? 12,
       hourly_padding: config.hourly_padding ?? 6,
-      hourly_time_font_size: config.hourly_time_font_size ?? 0.65
+      hourly_time_font_size: config.hourly_time_font_size ?? 0.65,
+      hide_daily_section: config.hide_daily_section ?? false
     }
   }
 
