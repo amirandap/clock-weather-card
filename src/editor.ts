@@ -48,55 +48,37 @@ const SCHEMA = [
     type: 'expandable',
     title: 'Header',
     schema: [
+      { name: 'hide_today_section', selector: { boolean: {} } },
+      { name: 'hide_clock', selector: { boolean: {} } },
+      { name: 'hide_date', selector: { boolean: {} } },
+      { name: 'show_humidity', selector: { boolean: {} } },
       {
-        name: '',
-        type: 'grid',
-        schema: [
-          { name: 'hide_today_section', selector: { boolean: {} } },
-          { name: 'hide_clock', selector: { boolean: {} } },
-          { name: 'hide_date', selector: { boolean: {} } },
-          { name: 'show_humidity', selector: { boolean: {} } }
-        ]
+        name: 'hero_display',
+        selector: {
+          select: {
+            options: [
+              { value: 'time', label: 'Time' },
+              { value: 'temperature', label: 'Temperature' }
+            ],
+            mode: 'dropdown'
+          }
+        }
       },
       {
-        name: '',
-        type: 'grid',
-        schema: [
-          {
-            name: 'hero_display',
-            selector: {
-              select: {
-                options: [
-                  { value: 'time', label: 'Time' },
-                  { value: 'temperature', label: 'Temperature' }
-                ],
-                mode: 'dropdown'
-              }
-            }
-          },
-          {
-            name: 'time_format',
-            selector: {
-              select: {
-                options: [
-                  { value: '12', label: '12h (AM/PM)' },
-                  { value: '24', label: '24h' }
-                ],
-                mode: 'dropdown'
-              }
-            }
+        name: 'time_format',
+        selector: {
+          select: {
+            options: [
+              { value: '12', label: '12h (AM/PM)' },
+              { value: '24', label: '24h' }
+            ],
+            mode: 'dropdown'
           }
-        ]
+        }
       },
       { name: 'time_pattern', selector: { text: {} } },
-      {
-        name: '',
-        type: 'grid',
-        schema: [
-          { name: 'icon_size', selector: { number: { min: 16, max: 120, unit_of_measurement: 'px', mode: 'slider' } } },
-          { name: 'sub_font_size', selector: { number: { min: 0.8, max: 3, step: 0.05, unit_of_measurement: 'rem', mode: 'slider' } } }
-        ]
-      }
+      { name: 'icon_size', selector: { number: { min: 16, max: 120, unit_of_measurement: 'px', mode: 'slider' } } },
+      { name: 'sub_font_size', selector: { number: { min: 0.8, max: 3, step: 0.05, unit_of_measurement: 'rem', mode: 'slider' } } }
     ]
   },
 
@@ -106,15 +88,9 @@ const SCHEMA = [
     type: 'expandable',
     title: 'Hourly Forecast',
     schema: [
-      {
-        name: '',
-        type: 'grid',
-        schema: [
-          { name: 'hourly_forecast', selector: { boolean: {} } },
-          { name: 'show_hourly_temp', selector: { boolean: {} } },
-          { name: 'hourly_forecast_columns', selector: { number: { min: 1, max: 12, mode: 'box' } } }
-        ]
-      },
+      { name: 'hourly_forecast', selector: { boolean: {} } },
+      { name: 'show_hourly_temp', selector: { boolean: {} } },
+      { name: 'hourly_forecast_columns', selector: { number: { min: 1, max: 12, mode: 'box' } } },
       { name: 'hourly_forecast_size', selector: { number: { min: 50, max: 200, unit_of_measurement: '%', mode: 'slider' } } },
       { name: 'hourly_padding', selector: { number: { min: 0, max: 32, unit_of_measurement: 'px', mode: 'slider' } } },
       { name: 'hourly_time_font_size', selector: { number: { min: 0.5, max: 2, step: 0.05, unit_of_measurement: 'rem', mode: 'slider' } } }
@@ -127,33 +103,21 @@ const SCHEMA = [
     type: 'expandable',
     title: 'Daily Forecast',
     schema: [
+      { name: 'hide_daily_section', selector: { boolean: {} } },
+      { name: 'hide_forecast_section', selector: { boolean: {} } },
+      { name: 'show_daily_temp', selector: { boolean: {} } },
+      { name: 'day_forecast_columns', selector: { number: { min: 1, max: 10, mode: 'box' } } },
       {
-        name: '',
-        type: 'grid',
-        schema: [
-          { name: 'hide_daily_section', selector: { boolean: {} } },
-          { name: 'hide_forecast_section', selector: { boolean: {} } },
-          { name: 'show_daily_temp', selector: { boolean: {} } }
-        ]
-      },
-      {
-        name: '',
-        type: 'grid',
-        schema: [
-          { name: 'day_forecast_columns', selector: { number: { min: 1, max: 10, mode: 'box' } } },
-          {
-            name: 'day_name_format',
-            selector: {
-              select: {
-                options: [
-                  { value: 'long', label: 'Long (Monday)' },
-                  { value: 'short', label: 'Short (Mon)' }
-                ],
-                mode: 'dropdown'
-              }
-            }
+        name: 'day_name_format',
+        selector: {
+          select: {
+            options: [
+              { value: 'long', label: 'Long (Monday)' },
+              { value: 'short', label: 'Short (Mon)' }
+            ],
+            mode: 'dropdown'
           }
-        ]
+        }
       },
       { name: 'daily_forecast_size', selector: { number: { min: 50, max: 200, unit_of_measurement: '%', mode: 'slider' } } }
     ]
@@ -166,32 +130,20 @@ const SCHEMA = [
     title: 'Overall',
     schema: [
       {
-        name: '',
-        type: 'grid',
-        schema: [
-          {
-            name: 'weather_icon_type',
-            selector: {
-              select: {
-                options: [
-                  { value: 'line', label: 'Line' },
-                  { value: 'fill', label: 'Fill' }
-                ],
-                mode: 'dropdown'
-              }
-            }
-          },
-          { name: 'animated_icon', selector: { boolean: {} } }
-        ]
+        name: 'weather_icon_type',
+        selector: {
+          select: {
+            options: [
+              { value: 'line', label: 'Line' },
+              { value: 'fill', label: 'Fill' }
+            ],
+            mode: 'dropdown'
+          }
+        }
       },
-      {
-        name: '',
-        type: 'grid',
-        schema: [
-          { name: 'show_decimal', selector: { boolean: {} } },
-          { name: 'use_browser_time', selector: { boolean: {} } }
-        ]
-      },
+      { name: 'animated_icon', selector: { boolean: {} } },
+      { name: 'show_decimal', selector: { boolean: {} } },
+      { name: 'use_browser_time', selector: { boolean: {} } },
       { name: 'card_padding', selector: { number: { min: 0, max: 48, unit_of_measurement: 'px', mode: 'slider' } } },
       { name: 'locale', selector: { text: {} } },
       { name: 'time_zone', selector: { text: {} } }
