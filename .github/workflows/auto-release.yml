@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   release:
     name: Bump version & publish release
@@ -46,6 +49,7 @@ jobs:
           git add package.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
           git tag v${{ steps.version.outputs.version }}
+          git pull --rebase origin master
           git push
           git push origin v${{ steps.version.outputs.version }}
 

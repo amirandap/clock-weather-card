@@ -53,6 +53,7 @@
     "start": "rollup -c rollup.config.dev.js --watch",
     "build": "npx rollup -c",
     "lint": "eslint **/*.ts --max-warnings 0",
+    "typecheck": "tsc --noEmit",
     "rollup": "rollup -c",
     "prepare": "husky"
   },

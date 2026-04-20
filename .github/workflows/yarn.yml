@@ -1,24 +1,28 @@
-name: yarn
+name: CI
 
 on:
   push:
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     # Skip version-bump commits from the auto-release workflow
     if: "!contains(github.event.head_commit.message, 'chore: bump version')"
-    name: yarn
+    name: build, lint & typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
       - name: Build
         run: |
-          yarn install
+          yarn install --frozen-lockfile
           yarn build
       - name: Lint
-        run: |
-          yarn lint
+        run: yarn lint
+      - name: Type check
+        run: yarn typecheck

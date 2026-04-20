@@ -480,7 +480,10 @@ export class ClockWeatherCard extends LitElement {
       hourly_time_font_size: config.hourly_time_font_size ?? 0.65,
       hide_daily_section: config.hide_daily_section ?? false,
       show_daily_temp: config.show_daily_temp ?? true,
-      show_hourly_temp: config.show_hourly_temp ?? false
+      show_hourly_temp: config.show_hourly_temp ?? false,
+      show_clouds: config.show_clouds ?? true,
+      show_humidity_daily: config.show_humidity_daily ?? false,
+      show_humidity_hourly: config.show_humidity_hourly ?? false
     }
   }
 
@@ -702,13 +705,17 @@ export class ClockWeatherCard extends LitElement {
     const conditions = forecasts.map((f) => f.condition)
     const condition = extractMostOccuring(conditions)
 
+    const humidities = forecasts.map((f) => f.humidity ?? null).filter((h): h is number => h !== null)
+    const humidity = humidities.length > 0 ? humidities.reduce((a, b) => a + b, 0) / humidities.length : null
+
     return {
       temperature: maxTemp,
       templow: minTemp,
       datetime: this.parseDateTime(forecasts[0].datetime),
       condition,
       precipitation_probability: precipitationProbability,
-      precipitation
+      precipitation,
+      humidity
     }
   }
 
