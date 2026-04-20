@@ -600,7 +600,7 @@ export class HassWeatherCard extends LitElement {
       <div class="forecast-daily" style="--daily-cols: ${items.length}">
         ${items.map(f => safeRender(() => {
           const icon = this.toIcon(f.condition, this.config.weather_icon_type, true, 'static')
-          const temp = this.toConfiguredTempWithUnit(entityTempUnit, Math.round(f.temperature))
+          const temp = `${this.toConfiguredTempWithoutUnit(entityTempUnit, Math.round(f.temperature))}°`
           const day = isLong
             ? f.datetime.setLocale(this.getLocale()).toFormat('cccc')
             : this.localize(`day.${f.datetime.weekday}`)
@@ -659,10 +659,10 @@ export class HassWeatherCard extends LitElement {
       sub_font_size: config.sub_font_size ?? 1.3,
       icon_size: config.icon_size ?? 48,
       hero_gap: config.hero_gap ?? 8,
-      day_name_format: config.day_name_format ?? 'long',
+      day_name_format: config.day_name_format ?? 'short',
       daily_forecast_size: config.daily_forecast_size ?? 100,
       hourly_forecast_size: config.hourly_forecast_size ?? 100,
-      card_padding: config.card_padding ?? 8,
+      card_padding: config.card_padding ?? 4,
       hourly_padding: config.hourly_padding ?? 6,
       hourly_time_font_size: config.hourly_time_font_size ?? 0.65,
       hide_daily_section: config.hide_daily_section ?? false,
