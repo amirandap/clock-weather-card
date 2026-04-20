@@ -210,7 +210,9 @@ export class HassWeatherCardEditor extends LitElement {
   }
 
   private _valueChanged (ev: CustomEvent): void {
-    fireEvent(this, 'config-changed', { config: ev.detail.value as ClockWeatherCardConfig })
+    // Merge onto original config to preserve fields not in schema (e.g. type, tap_action)
+    const config = { ...this._config, ...(ev.detail.value as ClockWeatherCardConfig) }
+    fireEvent(this, 'config-changed', { config })
   }
 
   protected render (): TemplateResult {
