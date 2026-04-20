@@ -175,6 +175,10 @@ export class HassWeatherCard extends LitElement {
     if (!this.config) {
       return false
     }
+    // Always re-render when config changes (editor toggles, sliders, etc.)
+    if (changedProps.has('config')) {
+      return true
+    }
     if (changedProps.has('forecasts') || changedProps.has('hourlyForecasts')) {
       return true
     }
@@ -191,6 +195,7 @@ export class HassWeatherCard extends LitElement {
       if (oldWeather !== newWeather) {
         return true
       }
+      return false
     }
     return hasConfigOrEntityChanged(this, changedProps, false)
   }
@@ -288,9 +293,9 @@ export class HassWeatherCard extends LitElement {
     const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain) return
 
-    const showClouds = LOTTIE_CLOUDS_GROUPS.has(group)
-    const showRain = LOTTIE_RAIN_GROUPS.has(group)
-    const showWind = LOTTIE_WIND_GROUPS.has(group)
+    const showClouds = LOTTIE_CLOUDS_GROUPS.has(group) && this.config.show_clouds
+    const showRain = LOTTIE_RAIN_GROUPS.has(group) && this.config.show_clouds
+    const showWind = LOTTIE_WIND_GROUPS.has(group) && this.config.show_clouds
 
     canvasClouds.classList.toggle('is-visible', showClouds)
     canvasClouds2?.classList.toggle('is-visible', showClouds)
@@ -570,6 +575,9 @@ export class HassWeatherCard extends LitElement {
           const precip = f.precipitation_probability != null && f.precipitation_probability > 0
             ? html`<span class="hour-slot__precip">${Math.round(f.precipitation_probability)}%</span>`
             : ''
+          const hourHumid = this.config.show_humidity_hourly && f.humidity != null
+            ? html`<span class="hour-slot__humid">${Math.round(f.humidity)}%</span>`
+            : ''
           const hourTemp = this.config.show_hourly_temp
             ? html`<span class="hour-slot__temp">${this.toConfiguredTempWithUnit(this.getWeather().attributes.temperature_unit, Math.round(f.temperature))}</span>`
             : ''
@@ -579,6 +587,7 @@ export class HassWeatherCard extends LitElement {
               ${hourTemp}
               <span class="hour-slot__time">${timeLabel}</span>
               ${precip}
+              ${hourHumid}
             </div>
           `
         }))}
@@ -608,6 +617,7 @@ export class HassWeatherCard extends LitElement {
             <div class="forecast-slot">
               <img class="forecast-slot__icon" style="width:${iconSz}px;height:${iconSz}px" src=${icon} alt="" />
               ${this.config.show_daily_temp ? html`<span class="forecast-slot__temp">${temp}</span>` : ''}
+              ${this.config.show_humidity_daily && f.humidity != null ? html`<span class="forecast-slot__humid">${Math.round(f.humidity)}%</span>` : ''}
               <span class="forecast-slot__day">${day}</span>
             </div>
           `
@@ -667,7 +677,10 @@ export class HassWeatherCard extends LitElement {
       hourly_time_font_size: config.hourly_time_font_size ?? 0.65,
       hide_daily_section: config.hide_daily_section ?? false,
       show_daily_temp: config.show_daily_temp ?? true,
-      show_hourly_temp: config.show_hourly_temp ?? false
+      show_hourly_temp: config.show_hourly_temp ?? false,
+      show_clouds: config.show_clouds ?? true,
+      show_humidity_daily: config.show_humidity_daily ?? false,
+      show_humidity_hourly: config.show_humidity_hourly ?? false
     }
   }
 
@@ -834,6 +847,8 @@ export class HassWeatherCard extends LitElement {
     const maxTemp = max(maxTemps)
     const precipitationProbabilities = forecasts.map((f) => f.precipitation_probability ?? 0)
     const precipitations = forecasts.map((f) => f.precipitation ?? 0)
+    const humidities = forecasts.map((f) => f.humidity).filter((h): h is number => h != null)
+    const avgHumidity = humidities.length > 0 ? Math.round(humidities.reduce((a, b) => a + b, 0) / humidities.length) : null
     const conditions = forecasts.map((f) => f.condition)
 
     return {
@@ -842,7 +857,8 @@ export class HassWeatherCard extends LitElement {
       datetime: this.parseDateTime(forecasts[0].datetime),
       condition: extractMostOccuring(conditions),
       precipitation_probability: max(precipitationProbabilities),
-      precipitation: max(precipitations)
+      precipitation: max(precipitations),
+      humidity: avgHumidity
     }
   }
 

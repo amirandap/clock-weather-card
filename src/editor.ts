@@ -30,7 +30,10 @@ const CONFIG_DEFAULTS: Partial<ClockWeatherCardConfig> = {
   show_daily_temp: true,
   show_hourly_temp: false,
   show_decimal: false,
-  use_browser_time: false
+  use_browser_time: false,
+  show_clouds: true,
+  show_humidity_daily: false,
+  show_humidity_hourly: false
 }
 
 const SCHEMA = [
@@ -90,6 +93,7 @@ const SCHEMA = [
     schema: [
       { name: 'hourly_forecast', selector: { boolean: {} } },
       { name: 'show_hourly_temp', selector: { boolean: {} } },
+      { name: 'show_humidity_hourly', selector: { boolean: {} } },
       { name: 'hourly_forecast_columns', selector: { number: { min: 1, max: 12, mode: 'box' } } },
       { name: 'hourly_forecast_size', selector: { number: { min: 50, max: 200, unit_of_measurement: '%', mode: 'slider' } } },
       { name: 'hourly_padding', selector: { number: { min: 0, max: 32, unit_of_measurement: 'px', mode: 'slider' } } },
@@ -106,6 +110,7 @@ const SCHEMA = [
       { name: 'hide_daily_section', selector: { boolean: {} } },
       { name: 'hide_forecast_section', selector: { boolean: {} } },
       { name: 'show_daily_temp', selector: { boolean: {} } },
+      { name: 'show_humidity_daily', selector: { boolean: {} } },
       { name: 'day_forecast_columns', selector: { number: { min: 1, max: 10, mode: 'box' } } },
       {
         name: 'day_name_format',
@@ -142,6 +147,7 @@ const SCHEMA = [
         }
       },
       { name: 'animated_icon', selector: { boolean: {} } },
+      { name: 'show_clouds', selector: { boolean: {} } },
       { name: 'show_decimal', selector: { boolean: {} } },
       { name: 'use_browser_time', selector: { boolean: {} } },
       { name: 'card_padding', selector: { number: { min: 0, max: 48, unit_of_measurement: 'px', mode: 'slider' } } },
@@ -180,7 +186,10 @@ const LABELS: Record<string, string> = {
   sub_font_size: 'Condition Font Size',
   hourly_forecast: 'Show Hourly',
   show_hourly_temp: 'Show Hourly Temp',
+  show_humidity_hourly: 'Show Humidity (hourly)',
   show_daily_temp: 'Show Daily Temp',
+  show_humidity_daily: 'Show Humidity (daily)',
+  show_clouds: 'Show Clouds / Rain Animation',
   show_humidity: 'Show Humidity',
   show_decimal: 'Show Decimal',
   hide_today_section: 'Hide Header',
@@ -202,6 +211,10 @@ export class HassWeatherCardEditor extends LitElement {
     // Spread defaults first so sliders always show a value, then overlay user config.
     // ha-form-expandable passes the FULL flat data to inner ha-form, so no nesting needed.
     const merged: Partial<ClockWeatherCardConfig> = { ...CONFIG_DEFAULTS, ...config }
+    // Normalize time_format to string — YAML may deserialise it as the number 12 or 24
+    if (merged.time_format != null) {
+      merged.time_format = String(merged.time_format) as '12' | '24'
+    }
     this._config = merged as ClockWeatherCardConfig
   }
 

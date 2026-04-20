@@ -453,7 +453,7 @@ ha-card[data-theme="dusk-foggy"] {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 8px 8px;
+    padding: 6px 0 4px;
     overflow: hidden;
   }
 
@@ -461,9 +461,9 @@ ha-card[data-theme="dusk-foggy"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     flex: 1;
-    padding: 2px 1px;
+    padding: 1px 0;
   }
 
   .hour-slot__time {
@@ -492,6 +492,12 @@ ha-card[data-theme="dusk-foggy"] {
     filter: drop-shadow(0 0 2px rgba(80, 160, 255, 0.6));
   }
 
+  .hour-slot__humid {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(160, 220, 255, 0.75);
+  }
+
   .forecast-daily {
     display: grid;
     grid-template-columns: repeat(var(--daily-cols, 4), 1fr);
@@ -503,8 +509,8 @@ ha-card[data-theme="dusk-foggy"] {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 10px 4px;
+    gap: 4px;
+    padding: 8px 2px;
     min-width: 0;
     overflow: hidden;
   }
@@ -530,5 +536,11 @@ ha-card[data-theme="dusk-foggy"] {
     font-weight: 700;
     text-transform: uppercase;
     color: var(--color-text-secondary);
+  }
+
+  .forecast-slot__humid {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(160, 220, 255, 0.75);
   }
 `

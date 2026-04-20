@@ -64,6 +64,12 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   show_daily_temp?: boolean
   /** Show temperature in hourly forecast slots (default: false) */
   show_hourly_temp?: boolean
+  /** Show clouds / rain lottie animation layer (default: true) */
+  show_clouds?: boolean
+  /** Show humidity % in daily forecast slots (default: false) */
+  show_humidity_daily?: boolean
+  /** Show humidity % in hourly forecast slots (default: false) */
+  show_humidity_hourly?: boolean
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -106,6 +112,9 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   hide_daily_section: boolean
   show_daily_temp: boolean
   show_hourly_temp: boolean
+  show_clouds: boolean
+  show_humidity_daily: boolean
+  show_humidity_hourly: boolean
 }
 
 export const enum WeatherEntityFeature {
@@ -142,6 +151,7 @@ export interface MergedWeatherForecast {
   datetime: DateTime
   condition: string
   temperature: number
+  humidity: number | null
   precipitation: number
   precipitation_probability: number
   templow: number
