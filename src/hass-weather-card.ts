@@ -530,14 +530,14 @@ export class HassWeatherCard extends LitElement {
 
     return html`
       <div class="hero">
-        <p class="temp">${heroMain}</p>
-        <div class="hero-info-row">
-          <div class="hero-info-left">
+        <div class="hero-main-row">
+          <p class="temp">${heroMain}</p>
+          <div class="hero-icon-block">
             <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
-            <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+            <span class="hero-temp-inline" style="font-size:${subSize}">${isTimeHero ? localizedTemp : (metaSub ?? '')}</span>
           </div>
-          <span class="hero-temp-inline" style="font-size:${subSize}">${isTimeHero ? localizedTemp : (metaSub ?? '')}</span>
         </div>
+        <span class="condition" style="font-size:${subSize}">${weatherString}</span>
         ${humidity !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.humidity')}: ${humidity}%</span>` : ''}
         ${apparent !== null ? html`<span class="hero-meta" style="font-size:calc(${subSize} * 0.75)">${this.localize('ui.card.weather.attributes.apparent_temperature')}: ${this.toConfiguredTempWithUnit(tempUnit, apparent)}</span>` : ''}
       </div>
@@ -646,7 +646,7 @@ export class HassWeatherCard extends LitElement {
       aqi_sensor: config.aqi_sensor ?? undefined,
       hero_display: config.hero_display ?? 'time',
       sub_font_size: config.sub_font_size ?? 1.3,
-      icon_size: config.icon_size ?? 40,
+      icon_size: config.icon_size ?? 48,
       hero_gap: config.hero_gap ?? 8,
       day_name_format: config.day_name_format ?? 'long',
       daily_forecast_size: config.daily_forecast_size ?? 100,

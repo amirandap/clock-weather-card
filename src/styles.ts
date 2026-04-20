@@ -357,28 +357,27 @@ ha-card[data-theme="dusk-foggy"] {
   .hero {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     margin-top: 0;
   }
 
-  /* Info row: [icon + condition] left, temp right */
-  .hero-info-row {
+  /* Main row: big clock left, icon+temp stacked right */
+  .hero-main-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
   }
 
-  /* Icon and condition text grouped together */
-  .hero-info-left {
+  /* Icon and temperature stacked vertically in top-right */
+  .hero-icon-block {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    min-width: 0;
-    overflow: hidden;
+    gap: 4px;
+    flex-shrink: 0;
+    padding-top: 4px;
   }
-
-  /* hero-top wrapper removed — .temp and .hero-right are direct grid children */
 
   .temp {
     font-size: clamp(3.7rem, 26cqw, 7.5rem);
@@ -400,7 +399,7 @@ ha-card[data-theme="dusk-foggy"] {
     text-overflow: ellipsis;
   }
 
-  /* Temperature shown inline with condition in info row */
+  /* Temperature shown below icon in the hero-icon-block */
   .hero-temp-inline {
     font-size: 1.28rem;
     font-weight: 700;

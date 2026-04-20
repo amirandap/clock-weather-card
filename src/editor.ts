@@ -11,7 +11,7 @@ const CONFIG_DEFAULTS: Partial<ClockWeatherCardConfig> = {
   day_name_format: 'long',
   weather_icon_type: 'line',
   animated_icon: true,
-  icon_size: 40,
+  icon_size: 48,
   sub_font_size: 1.3,
   day_forecast_columns: 5,
   hourly_forecast_columns: 4,
