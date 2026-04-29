@@ -416,6 +416,17 @@ ha-card[data-theme="dusk-foggy"] {
     text-overflow: ellipsis;
   }
 
+  .hero-date {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* Temperature shown below icon in the hero-icon-block */
   .hero-temp-inline {
     font-size: 1.28rem;

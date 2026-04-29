@@ -432,6 +432,8 @@ export class HassWeatherCard extends LitElement {
     }
 
     const showForecast = !this.config.hide_forecast_section
+    const showHourlyStrip = this.config.hourly_forecast && (this.hourlyForecasts?.length ?? 0) > 0
+    const showDailyStrip = showForecast && !this.config.hide_daily_section
 
     return html`
       <ha-card
@@ -460,11 +462,11 @@ export class HassWeatherCard extends LitElement {
         <!-- All text content, z-index 2 -->
         <div class="card-body" style="padding: ${this.config.card_padding}px">
           ${this.config.hide_today_section ? '' : safeRender(() => this.renderHero())}
-          ${showForecast
+          ${(showDailyStrip || showHourlyStrip)
             ? html`
             <div class="forecast-section">
-              ${(this.config.hourly_forecast && this.hourlyForecasts?.length) ? safeRender(() => this.renderHourlyStrip()) : ''}
-              ${!this.config.hide_daily_section ? safeRender(() => this.renderDailyStrip()) : ''}
+              ${showHourlyStrip ? safeRender(() => this.renderHourlyStrip()) : ''}
+              ${showDailyStrip ? safeRender(() => this.renderDailyStrip()) : ''}
             </div>
           `
             : ''}
@@ -546,6 +548,7 @@ export class HassWeatherCard extends LitElement {
           <div class="hero-left">
             <p class="temp">${heroMain}</p>
             <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+            ${!this.config.hide_date ? html`<span class="hero-date">${this.date()}</span>` : ''}
           </div>
           <div class="hero-icon-block">
             <img class="icon-main" style="width:${iconPx};height:${iconPx}" src=${icon} />
@@ -751,6 +754,10 @@ export class HassWeatherCard extends LitElement {
 
   private getLocale (): string {
     return this.config.locale ?? this.hass?.locale?.language ?? 'en-GB'
+  }
+
+  private date (): string {
+    return this.toZonedDate(this.currentDate).toFormat(this.config.date_pattern)
   }
 
   private time (date: DateTime = this.currentDate): string {
