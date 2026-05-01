@@ -31,17 +31,17 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Build
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
       - name: Bump patch version
         id: version
         run: |
           npm version patch --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build
-        run: |
-          yarn install --frozen-lockfile
-          yarn build
 
       - name: Commit version bump & push tag
         env:
