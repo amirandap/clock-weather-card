@@ -19,12 +19,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'yarn'
+          cache: 'npm'
 
       - name: Build the card
         run: |
-          yarn install --frozen-lockfile
-          yarn build
+          npm ci --legacy-peer-deps
+          npm run build
 
       - name: Upload JS to release
         uses: svenstaro/upload-release-action@v2

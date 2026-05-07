@@ -30,14 +30,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          # Cache ~/.cache/yarn keyed on yarn.lock so re-runs skip downloads
-          # and yarn install becomes a near-instant integrity check.
-          cache: 'yarn'
+          cache: 'npm'
 
       - name: Build
         run: |
-          yarn install --frozen-lockfile
-          yarn build
+          npm ci --legacy-peer-deps
+          npm run build
 
       - name: Bump patch version
         id: version
@@ -53,15 +51,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          # Diagnostic: show any files dirtied by the build step so a future
-          # regression is visible in the workflow log.
-          echo "::group::Working tree state after build"
-          git status --short
-          echo "::endgroup::"
-          # Reset ALL build side-effects (yarn.lock, husky hooks, etc), then re-apply
-          # only the version bump. This guarantees a clean tree regardless of which
-          # files yarn/husky/postinstall scripts decide to touch.
-          git checkout HEAD -- .
+          # npm ci never modifies package-lock.json so the working tree
+          # is guaranteed clean after the build step. No defensive reset needed.
           npm pkg set version="${{ steps.version.outputs.version }}"
           # Commit the bump locally first, then rebase on top of remote master.
           # git pull --rebase requires a clean working tree; committing first satisfies that.

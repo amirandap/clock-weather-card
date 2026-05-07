@@ -46,8 +46,8 @@
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-gzip": "^4.0.0",
     "rollup-plugin-serve": "^3.0.0",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "typescript": "*"
+    "rollup-plugin-typescript2": "^0.37.0",
+    "typescript": "~5.8.0"
   },
   "scripts": {
     "start": "rollup -c rollup.config.dev.js --watch",
