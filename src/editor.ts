@@ -25,7 +25,7 @@ const CONFIG_DEFAULTS: Partial<ClockWeatherCardConfig> = {
   hide_forecast_section: false,
   hide_daily_section: false,
   hide_clock: false,
-  hide_date: false,
+  hide_date: true,
   show_humidity: false,
   show_daily_temp: true,
   show_hourly_temp: false,

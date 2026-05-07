@@ -161,16 +161,52 @@ export class HassWeatherCard extends LitElement {
     }
     // Migrate legacy nested editor groups (`_header`, `_hourly`, `_daily`, `_overall`)
     // saved by older editor versions where ha-form `expandable` sections were not
-    // flattened. Lift their fields up to the root so the card renders correctly.
+    // flattened. Only lift a nested value when it differs from the known default —
+    // that means the user explicitly changed it in the editor. If the nested value
+    // equals the default it was just stored as a placeholder and the intentional
+    // value lives at the root (e.g. root `hourly_forecast: true` vs nested `false`).
+    const MIGRATION_DEFAULTS: Record<string, unknown> = {
+      hero_display: 'time',
+      time_format: '12',
+      time_pattern: 'h:mm',
+      day_name_format: 'short',
+      weather_icon_type: 'line',
+      animated_icon: true,
+      icon_size: 48,
+      sub_font_size: 1.3,
+      day_forecast_columns: 5,
+      hourly_forecast_columns: 4,
+      daily_forecast_size: 100,
+      hourly_forecast_size: 100,
+      card_padding: 4,
+      hourly_padding: 6,
+      hourly_time_font_size: 0.65,
+      hourly_forecast: false,
+      hide_today_section: false,
+      hide_forecast_section: false,
+      hide_daily_section: false,
+      hide_clock: false,
+      hide_date: true,
+      show_humidity: false,
+      show_daily_temp: true,
+      show_hourly_temp: false,
+      show_decimal: false,
+      use_browser_time: false,
+      show_clouds: true,
+      show_humidity_daily: false,
+      show_humidity_hourly: false
+    }
     const groupKeys = ['_header', '_hourly', '_daily', '_overall']
     const flat: Record<string, unknown> = { ...(config as unknown as Record<string, unknown>) }
     for (const key of groupKeys) {
       const nested = flat[key]
       if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
         for (const [k, v] of Object.entries(nested as Record<string, unknown>)) {
-          // Nested values take precedence so toggles persisted in the legacy
-          // location are honored until the user re-saves with the new editor.
-          flat[k] = v
+          // Only lift if the user explicitly changed this value (differs from default).
+          // This avoids overriding intentional root values with group-stored defaults.
+          if (v !== MIGRATION_DEFAULTS[k]) {
+            flat[k] = v
+          }
         }
         flat[key] = undefined
       }
@@ -678,7 +714,7 @@ export class HassWeatherCard extends LitElement {
       hide_forecast_section: config.hide_forecast_section ?? false,
       hide_today_section: config.hide_today_section ?? false,
       hide_clock: config.hide_clock ?? false,
-      hide_date: config.hide_date ?? false,
+      hide_date: config.hide_date ?? true,
       date_pattern: config.date_pattern ?? 'D',
       use_browser_time: config.use_browser_time ?? false,
       time_zone: config.time_zone ?? undefined,
