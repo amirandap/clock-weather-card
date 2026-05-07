@@ -293,14 +293,17 @@ export class ClockWeatherCard extends LitElement {
     const isNow = hourly ? DateTime.now().hour === forecast.datetime.hour : DateTime.now().day === forecast.datetime.day
     const minTempDay = Math.round(isNow && currentTemp !== null ? Math.min(currentTemp, forecast.templow) : forecast.templow)
     const maxTempDay = Math.round(isNow && currentTemp !== null ? Math.max(currentTemp, forecast.temperature) : forecast.temperature)
+    const showTemp = hourly ? this.config.show_hourly_temp : this.config.show_daily_temp
+    const showHumidity = hourly ? this.config.show_humidity_hourly : this.config.show_humidity_daily
 
     return html`
       <clock-weather-card-forecast-row style="--col-one-size: ${(maxColOneChars * 0.5)}rem;">
         ${this.renderText(displayText)}
         ${this.renderIcon(weatherIcon)}
-        ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, minTempDay), 'right')}
+        ${showTemp ? this.renderText(this.toConfiguredTempWithUnit(tempUnit, minTempDay), 'right') : this.renderText('', 'right')}
         ${this.renderForecastTemperatureBar(minTemp, maxTemp, minTempDay, maxTempDay, isNow, currentTemp, temperatureUnit)}
-        ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, maxTempDay))}
+        ${showTemp ? this.renderText(this.toConfiguredTempWithUnit(tempUnit, maxTempDay)) : this.renderText('')}
+        ${showHumidity && forecast.humidity != null ? this.renderText(`${Math.round(forecast.humidity)}%`) : ''}
       </clock-weather-card-forecast-row>
     `
   }
