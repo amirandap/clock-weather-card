@@ -159,6 +159,23 @@ export class HassWeatherCard extends LitElement {
     if (!config) {
       throw this.createError('Invalid configuration.')
     }
+    // Migrate legacy nested editor groups (`_header`, `_hourly`, `_daily`, `_overall`)
+    // saved by older editor versions where ha-form `expandable` sections were not
+    // flattened. Lift their fields up to the root so the card renders correctly.
+    const groupKeys = ['_header', '_hourly', '_daily', '_overall']
+    const flat: Record<string, unknown> = { ...(config as unknown as Record<string, unknown>) }
+    for (const key of groupKeys) {
+      const nested = flat[key]
+      if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+        for (const [k, v] of Object.entries(nested as Record<string, unknown>)) {
+          // Nested values take precedence so toggles persisted in the legacy
+          // location are honored until the user re-saves with the new editor.
+          flat[k] = v
+        }
+        flat[key] = undefined
+      }
+    }
+    config = flat as unknown as ClockWeatherCardConfig
     if (!config.entity) {
       throw this.createError('Attribute "entity" must be present.')
     }

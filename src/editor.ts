@@ -50,6 +50,7 @@ const SCHEMA = [
     name: '_header',
     type: 'expandable',
     title: 'Header',
+    flatten: true,
     schema: [
       { name: 'hide_today_section', selector: { boolean: {} } },
       { name: 'hide_clock', selector: { boolean: {} } },
@@ -90,6 +91,7 @@ const SCHEMA = [
     name: '_hourly',
     type: 'expandable',
     title: 'Hourly Forecast',
+    flatten: true,
     schema: [
       { name: 'hourly_forecast', selector: { boolean: {} } },
       { name: 'show_hourly_temp', selector: { boolean: {} } },
@@ -106,6 +108,7 @@ const SCHEMA = [
     name: '_daily',
     type: 'expandable',
     title: 'Daily Forecast',
+    flatten: true,
     schema: [
       { name: 'hide_daily_section', selector: { boolean: {} } },
       { name: 'hide_forecast_section', selector: { boolean: {} } },
@@ -133,6 +136,7 @@ const SCHEMA = [
     name: '_overall',
     type: 'expandable',
     title: 'Overall',
+    flatten: true,
     schema: [
       {
         name: 'weather_icon_type',
