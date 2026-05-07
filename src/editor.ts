@@ -26,6 +26,7 @@ const CONFIG_DEFAULTS: Partial<ClockWeatherCardConfig> = {
   hide_daily_section: false,
   hide_clock: false,
   hide_date: true,
+  hide_condition: false,
   show_humidity: false,
   show_daily_temp: true,
   show_hourly_temp: false,
@@ -55,6 +56,7 @@ const SCHEMA = [
       { name: 'hide_today_section', selector: { boolean: {} } },
       { name: 'hide_clock', selector: { boolean: {} } },
       { name: 'hide_date', selector: { boolean: {} } },
+      { name: 'hide_condition', selector: { boolean: {} } },
       { name: 'show_humidity', selector: { boolean: {} } },
       {
         name: 'hero_display',
@@ -201,6 +203,7 @@ const LABELS: Record<string, string> = {
   hide_daily_section: 'Hide Daily',
   hide_clock: 'Hide Clock',
   hide_date: 'Hide Date',
+  hide_condition: 'Hide Weather Description',
   use_browser_time: 'Use Browser Time',
   locale: 'Locale',
   time_zone: 'Time Zone'

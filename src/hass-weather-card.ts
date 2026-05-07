@@ -187,6 +187,7 @@ export class HassWeatherCard extends LitElement {
       hide_daily_section: false,
       hide_clock: false,
       hide_date: true,
+      hide_condition: false,
       show_humidity: false,
       show_daily_temp: true,
       show_hourly_temp: false,
@@ -600,7 +601,7 @@ export class HassWeatherCard extends LitElement {
         <div class="hero-main-row">
           <div class="hero-left">
             <p class="temp">${heroMain}</p>
-            <span class="condition" style="font-size:${subSize}">${weatherString}</span>
+            <span class="condition" style="font-size:${subSize}">${!this.config.hide_condition ? weatherString : ''}</span>
             ${!this.config.hide_date ? html`<span class="hero-date">${this.date()}</span>` : ''}
           </div>
           <div class="hero-icon-block">
@@ -715,6 +716,7 @@ export class HassWeatherCard extends LitElement {
       hide_today_section: config.hide_today_section ?? false,
       hide_clock: config.hide_clock ?? false,
       hide_date: config.hide_date ?? true,
+      hide_condition: config.hide_condition ?? false,
       date_pattern: config.date_pattern ?? 'D',
       use_browser_time: config.use_browser_time ?? false,
       time_zone: config.time_zone ?? undefined,

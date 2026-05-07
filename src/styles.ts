@@ -326,8 +326,8 @@ ha-card[data-theme="dusk-foggy"] {
     height: 65%;
   }
 
-  #lottieCanvasClouds.is-visible  { opacity: 0.28; }
-  #lottieCanvasClouds2.is-visible { opacity: 0.22; }
+  #lottieCanvasClouds.is-visible  { opacity: 0.55; }
+  #lottieCanvasClouds2.is-visible { opacity: 0.40; }
   #lottieCanvasRain.is-visible    { opacity: 0.55; }
   #lottieCanvasRain2.is-visible   { opacity: 0.45; }
   #lottieCanvasWind.is-visible    { opacity: 0.48; }
@@ -397,7 +397,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .temp {
-    font-size: clamp(3.7rem, 26cqw, 7.5rem);
+    font-size: clamp(4.625rem, 32.5cqw, 9.375rem);
     font-weight: 900;
     color: var(--color-text-primary);
     line-height: 1;
@@ -439,7 +439,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .hero-meta {
-    font-size: 0.85rem;
+    font-size: 1.0625rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     line-height: 1.3;
@@ -491,20 +491,20 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .hour-slot__temp {
-    font-size: 0.85rem;
+    font-size: 1.0625rem;
     font-weight: 800;
     color: var(--color-text-primary, #fff);
   }
 
   .hour-slot__precip {
-    font-size: 0.65rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     color: rgba(120, 200, 255, 0.9);
     filter: drop-shadow(0 0 2px rgba(80, 160, 255, 0.6));
   }
 
   .hour-slot__humid {
-    font-size: 0.65rem;
+    font-size: 0.8125rem;
     font-weight: 700;
     color: rgba(160, 220, 255, 0.75);
   }

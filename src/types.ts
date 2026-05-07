@@ -33,6 +33,7 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   hourly_forecast?: boolean
   hide_clock?: boolean
   hide_date?: boolean
+  hide_condition?: boolean
   use_browser_time?: boolean
   time_zone?: string
   show_decimal?: boolean
@@ -94,6 +95,7 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   hourly_forecast: boolean
   hide_clock: boolean
   hide_date: boolean
+  hide_condition: boolean
   use_browser_time: boolean
   time_zone?: string
   show_decimal: boolean
