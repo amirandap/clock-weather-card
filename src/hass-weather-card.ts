@@ -603,7 +603,7 @@ export class HassWeatherCard extends LitElement {
         <div class="hero-main-row">
           <div class="hero-left">
             <p class="temp">${heroMain}</p>
-            <span class="condition" style="font-size:${subSize}">${!this.config.hide_condition ? weatherString : ''}</span>
+            ${!this.config.hide_condition ? html`<span class="condition" style="font-size:${subSize}">${weatherString}</span>` : ''}
             ${!this.config.hide_date ? html`<span class="hero-date">${this.date()}</span>` : ''}
           </div>
           <div class="hero-icon-block">
