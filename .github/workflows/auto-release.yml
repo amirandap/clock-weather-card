@@ -60,7 +60,7 @@ jobs:
           npm pkg set version="${{ steps.version.outputs.version }}"
           # Commit the bump locally first, then rebase on top of remote master.
           # git pull --rebase requires a clean working tree; committing first satisfies that.
-          git add package.json
+          git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
           git tag v${{ steps.version.outputs.version }}
           git pull --rebase origin master
