@@ -50,14 +50,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          # Reset ALL tracked files to HEAD (clears yarn.lock and any other build side-effects),
-          # then re-apply only the version bump so git pull --rebase sees a clean tree.
+          # Reset ALL build side-effects (yarn.lock etc), then re-apply only the version bump.
           git checkout HEAD -- .
           npm pkg set version="${{ steps.version.outputs.version }}"
-          git pull --rebase origin master
+          # Commit the bump locally first, then rebase on top of remote master.
+          # git pull --rebase requires a clean working tree; committing first satisfies that.
           git add package.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
           git tag v${{ steps.version.outputs.version }}
+          git pull --rebase origin master
           git push origin HEAD:master
           git push origin v${{ steps.version.outputs.version }}
 
