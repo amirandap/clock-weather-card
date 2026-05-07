@@ -295,6 +295,7 @@ export class HassWeatherCard extends LitElement {
       autoplay: true,
       renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
+    this._lottieCloud.addEventListener('complete', () => { this._lottieCloud?.play() })
 
     this._lottieRain = new DotLottie({
       canvas: canvasRain,
@@ -303,6 +304,7 @@ export class HassWeatherCard extends LitElement {
       autoplay: true,
       renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
     })
+    this._lottieRain.addEventListener('complete', () => { this._lottieRain?.play() })
 
     if (canvasClouds2) {
       canvasClouds2.width = w; canvasClouds2.height = rowH
@@ -627,8 +629,10 @@ export class HassWeatherCard extends LitElement {
     return html`
       <div class="forecast-hourly" style="--hourly-time-font-size: ${this.config.hourly_time_font_size}rem; padding-top: ${this.config.hourly_padding}px; padding-bottom: ${this.config.hourly_padding}px">
         ${items.map(f => safeRender(() => {
-          const icon = this.toIcon(f.condition, this.config.weather_icon_type, false, this.getIconAnimationKind())
-          const timeLabel = this.toZonedDate(f.datetime).toFormat('h a')
+          const fDt = this.toZonedDate(f.datetime)
+          const slotDaytime = this.isForecastDaytime(fDt) ? 'day' : 'night'
+          const icon = this.toIcon(f.condition, this.config.weather_icon_type, false, this.getIconAnimationKind(), slotDaytime)
+          const timeLabel = fDt.toFormat('h a')
           const precip = f.precipitation_probability != null && f.precipitation_probability > 0
             ? html`<span class="hour-slot__precip">${Math.round(f.precipitation_probability)}%</span>`
             : ''
@@ -742,8 +746,8 @@ export class HassWeatherCard extends LitElement {
     }
   }
 
-  private toIcon (weatherState: string, type: 'fill' | 'line', forceDay: boolean, kind: 'static' | 'animated'): string {
-    const daytime = forceDay ? 'day' : this.getSun()?.state === 'below_horizon' ? 'night' : 'day'
+  private toIcon (weatherState: string, type: 'fill' | 'line', forceDay: boolean, kind: 'static' | 'animated', daytimeOverride?: 'day' | 'night'): string {
+    const daytime = daytimeOverride ?? (forceDay ? 'day' : this.getSun()?.state === 'below_horizon' ? 'night' : 'day')
     const iconMap = kind === 'animated' ? animatedIcons : staticIcons
     const icon = iconMap[type][weatherState] ?? iconMap[type].cloudy
     return icon?.[daytime] ?? icon ?? ''
@@ -805,6 +809,25 @@ export class HassWeatherCard extends LitElement {
 
   private getSun (): HassEntityBase | undefined {
     return this.hass.states[this.config.sun_entity]
+  }
+
+  /** Returns true if a forecast datetime falls during daytime, using sun entity next_rising/next_setting. */
+  private isForecastDaytime (dt: DateTime): boolean {
+    const sun = this.getSun()
+    if (!sun) return true
+    const attrs = (sun.attributes ?? {}) as Record<string, unknown>
+    const dtMs = dt.toMillis()
+    const settingMs = typeof attrs.next_setting === 'string' ? DateTime.fromISO(attrs.next_setting).toMillis() : Infinity
+    const risingMs = typeof attrs.next_rising === 'string' ? DateTime.fromISO(attrs.next_rising).toMillis() : Infinity
+    if (sun.state === 'above_horizon') {
+      // Day now: night starts at next_setting, then day again at next_rising
+      if (dtMs < settingMs) return true
+      return dtMs >= risingMs
+    } else {
+      // Night now: day starts at next_rising, then night again at next_setting
+      if (dtMs < risingMs) return false
+      return dtMs < settingMs
+    }
   }
 
   private getLocale (): string {
