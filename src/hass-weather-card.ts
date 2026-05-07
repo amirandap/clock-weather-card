@@ -284,7 +284,7 @@ export class HassWeatherCard extends LitElement {
     // Set canvas drawing buffer to full card dimensions
     const w = haCard.clientWidth || 460
     const h = haCard.clientHeight || 560
-    const rowH = Math.round(h * 0.65)
+    const rowH = Math.round(h * 0.85)
     canvasClouds.width = w; canvasClouds.height = rowH
     canvasRain.width = w; canvasRain.height = h
 
@@ -330,7 +330,7 @@ export class HassWeatherCard extends LitElement {
 
     if (canvasWind) {
       canvasWind.width = w
-      canvasWind.height = Math.round(h * 0.65)
+      canvasWind.height = Math.round(h * 0.85)
       this._lottieWind = new DotLottie({
         canvas: canvasWind,
         src: WIND_LOTTIE,

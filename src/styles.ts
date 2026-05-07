@@ -292,16 +292,16 @@ ha-card[data-theme="dusk-foggy"] {
     top: 0;
     left: 0;
     width: 100%;
-    height: 65%;
+    height: 85%;
     transform: translateX(-10%);
   }
 
   /* Row 2: overlapping lower clouds, shifted right for depth parallax */
   #lottieCanvasClouds2 {
-    top: 28%;
+    top: 15%;
     left: 0;
     width: 100%;
-    height: 65%;
+    height: 85%;
     transform: translateX(12%);
   }
 
@@ -326,14 +326,14 @@ ha-card[data-theme="dusk-foggy"] {
     top:  0;
     left: 0;
     width:  100%;
-    height: 65%;
+    height: 85%;
   }
 
-  #lottieCanvasClouds.is-visible  { opacity: 0.75; }
-  #lottieCanvasClouds2.is-visible { opacity: 0.60; }
-  #lottieCanvasRain.is-visible    { opacity: 0.72; }
-  #lottieCanvasRain2.is-visible   { opacity: 0.60; }
-  #lottieCanvasWind.is-visible    { opacity: 0.65; }
+  #lottieCanvasClouds.is-visible  { opacity: 0.88; }
+  #lottieCanvasClouds2.is-visible { opacity: 0.75; }
+  #lottieCanvasRain.is-visible    { opacity: 0.82; }
+  #lottieCanvasRain2.is-visible   { opacity: 0.70; }
+  #lottieCanvasWind.is-visible    { opacity: 0.78; }
 
   /* ── Weather icon (inside card, responsive) */
   .icon-main {
@@ -400,7 +400,7 @@ ha-card[data-theme="dusk-foggy"] {
   }
 
   .temp {
-    font-size: clamp(6rem, 42cqw, 12.2rem);
+    font-size: clamp(5.1rem, 35.7cqw, 10.4rem);
     font-weight: 900;
     color: var(--color-text-primary);
     line-height: 1;
