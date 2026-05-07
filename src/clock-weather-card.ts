@@ -153,7 +153,7 @@ export class ClockWeatherCard extends LitElement {
     }
 
     const showToday = !this.config.hide_today_section
-    const showForecast = !this.config.hide_forecast_section
+    const showForecast = !this.config.hide_forecast_section && !this.config.hide_daily_section
     return html`
       <ha-card
         @action=${(e: ActionHandlerEvent) => { this.handleAction(e) }}
