@@ -35,7 +35,7 @@ import { safeRender } from './helpers'
 import { DateTime } from 'luxon'
 import { DotLottie } from '@lottiefiles/dotlottie-web'
 import { CLOUDS_LOTTIE, RAIN_LOTTIE, WIND_LOTTIE } from './lottie-assets'
-import { buildBackground, type SkyOpts, elevationToPeriod, computeCardGradient } from './svg-scene'
+import { buildBackground, type SkyOpts, elevationToPeriod, computeCardGradient, CONDITION_GROUP } from './svg-scene'
 import './editor'
 
 // Point DotLottie at the co-located WASM file so it doesn't fetch from CDN
@@ -63,25 +63,6 @@ console.info(
   name: 'Hass Weather Card',
   description: 'Time-of-day theming, lottie backgrounds, and full HA weather integration.'
 })
-
-// ── Condition → CSS slug mapping (15 HA conditions → 8 slugs) ──────────
-const CONDITION_GROUP: Record<string, string> = {
-  'clear-night': 'sunny',
-  sunny: 'sunny',
-  partlycloudy: 'partly-cloudy',
-  cloudy: 'cloudy',
-  windy: 'windy',
-  'windy-variant': 'windy',
-  fog: 'foggy',
-  rainy: 'rainy',
-  'lightning-rainy': 'rainy',
-  hail: 'rainy',
-  'snowy-rainy': 'rainy',
-  pouring: 'pouring',
-  lightning: 'stormy',
-  snowy: 'snowy',
-  exceptional: 'cloudy'
-}
 
 // Condition groups that trigger cloud / rain / wind lottie layers
 const LOTTIE_CLOUDS_GROUPS = new Set(['sunny', 'partly-cloudy', 'cloudy', 'foggy', 'snowy', 'windy'])
@@ -174,6 +155,9 @@ export class HassWeatherCard extends LitElement {
   private _canvasWind?: HTMLCanvasElement
   // Last applied theme key — avoids redundant applyTheme() work on every hass tick
   private _lastThemeKey?: string
+  // Memoized scene background — only rebuilt when scene inputs change
+  private _sceneKey?: string
+  private _sceneSvg = ''
   private currentDateInterval?: ReturnType<typeof setInterval>
 
   constructor () {
@@ -439,21 +423,33 @@ export class HassWeatherCard extends LitElement {
         ? this.hass.states[this.config.moon_entity]
         : undefined
 
+      const sunElev = typeof sunAttrs.elevation === 'number' ? sunAttrs.elevation : undefined
+      const sunAz = typeof sunAttrs.azimuth === 'number' ? sunAttrs.azimuth : undefined
+      const moonPhase = typeof moonEntity?.state === 'string' ? moonEntity.state : ''
+      const cc = typeof wAttrs.cloud_coverage === 'number' ? wAttrs.cloud_coverage : -1
+      const vis = typeof wAttrs.visibility === 'number' ? wAttrs.visibility : -1
+
+      // Only rebuild the SVG when scene-relevant inputs change
+      const sceneKey = `${condition}|${period}|${sunElev !== undefined ? Math.round(sunElev) : '?'}|${sunAz !== undefined ? Math.round(sunAz) : '?'}|${moonPhase}|${cc}|${vis}`
+      if (sceneKey === this._sceneKey) return this._sceneSvg
+
+      this._sceneKey = sceneKey
       const opts: SkyOpts = {
-        sunElevation: typeof sunAttrs.elevation === 'number' ? sunAttrs.elevation : undefined,
-        sunAzimuth: typeof sunAttrs.azimuth === 'number' ? sunAttrs.azimuth : undefined,
+        sunElevation: sunElev,
+        sunAzimuth: sunAz,
         sunRising: typeof sunAttrs.rising === 'boolean' ? sunAttrs.rising : undefined,
-        cloudCoverage: typeof wAttrs.cloud_coverage === 'number' ? wAttrs.cloud_coverage : undefined,
+        cloudCoverage: cc === -1 ? undefined : cc,
         windSpeed: typeof wAttrs.wind_speed === 'number' ? wAttrs.wind_speed : undefined,
         windGustSpeed: typeof wAttrs.wind_gust_speed === 'number' ? wAttrs.wind_gust_speed : undefined,
-        visibility: typeof wAttrs.visibility === 'number' ? wAttrs.visibility : undefined,
+        visibility: vis === -1 ? undefined : vis,
         uvIndex: typeof wAttrs.uv_index === 'number' ? wAttrs.uv_index : undefined,
         humidity: typeof wAttrs.humidity === 'number' ? wAttrs.humidity : undefined,
         dewPoint: typeof wAttrs.dew_point === 'number' ? wAttrs.dew_point : undefined,
         pressure: typeof wAttrs.pressure === 'number' ? wAttrs.pressure : undefined,
-        moonPhase: typeof moonEntity?.state === 'string' ? moonEntity.state : undefined
+        moonPhase: moonPhase || undefined
       }
-      return buildBackground(condition, period, opts)
+      this._sceneSvg = buildBackground(condition, period, opts)
+      return this._sceneSvg
     } catch (_e) {
       return buildBackground('sunny', 'afternoon', {})
     }

@@ -6,7 +6,7 @@
  */
 
 /* ── Condition → visual group ─────────────────────────────────────────── */
-const CONDITION_GROUP: Record<string, string> = {
+export const CONDITION_GROUP: Record<string, string> = {
   'clear-night': 'sunny',
   sunny: 'sunny',
   partlycloudy: 'partly-cloudy',
@@ -161,21 +161,26 @@ function svgSun (cx: number, cy: number, opacity: number, color?: string): strin
 </g>`
 }
 
+// Moon phase → [shadowCx, shadowCy, shadowR, isGibbous] | null
+// isGibbous=false → shadow disc covers part of the lit disc (crescent)
+// isGibbous=true  → shadow is inset, revealing a gibbous shape
+const MOON_PHASES: Record<string, [number, number, number, boolean] | null> = {
+  new_moon: null,
+  full_moon: [0, 0, 0, false],
+  waxing_crescent: [-24, 0, 34, false],
+  first_quarter: [0, 0, 34, false],
+  waxing_gibbous: [22, 0, 34, false],
+  waning_gibbous: [-22, 0, 34, false],
+  last_quarter: [0, 0, 34, true],
+  waning_crescent: [24, 0, 34, true]
+}
+
 /**
  * Draw a phase-accurate moon using SVG clip paths.
  *
  * The moon disc (r=34) is always drawn in ivory (#F0E8D0).
  * An overlay circle is shifted horizontally to carve the correct
- * illuminated vs shadow portion for each phase:
- *
- *   new_moon         — fully dark (nearly invisible, just a glow ring)
- *   waxing_crescent  — thin right sliver lit
- *   first_quarter    — right half lit
- *   waxing_gibbous   — right 3/4 lit
- *   full_moon        — fully lit
- *   waning_gibbous   — left 3/4 lit
- *   last_quarter     — left half lit
- *   waning_crescent  — thin left sliver lit
+ * illuminated vs shadow portion for each phase.
  */
 function svgMoonPhased (cx: number, cy: number, phase: string): string {
   const r = 34
@@ -186,21 +191,7 @@ function svgMoonPhased (cx: number, cy: number, phase: string): string {
   // Shadow overlay colour matches the night sky
   const shadow = '#142840'
 
-  // For each phase: [shadowCx, shadowCy, shadowR, isGibbous]
-  // isGibbous=false → shadow circle covers part of the lit disc (crescent)
-  // isGibbous=true  → shadow is inset, revealing a gibbous shape
-  const phases: Record<string, [number, number, number, boolean] | null> = {
-    new_moon: null,
-    full_moon: [0, 0, 0, false],
-    waxing_crescent: [-24, 0, r, false],
-    first_quarter: [0, 0, r, false],
-    waxing_gibbous: [22, 0, r, false],
-    waning_gibbous: [-22, 0, r, false],
-    last_quarter: [0, 0, r, true],
-    waning_crescent: [24, 0, r, true]
-  }
-
-  const def = phases[phase]
+  const def = MOON_PHASES[phase]
 
   // new_moon: just a very dim ring, no disc
   if (def === undefined || def === null || phase === 'new_moon') {
@@ -247,7 +238,8 @@ function svgMoonPhased (cx: number, cy: number, phase: string): string {
 </g>`
 }
 
-function svgStars (): string {
+// Static SVG strings pre-computed at module load — never change between renders
+const SVG_STARS: string = (() => {
   const pts: Array<[number, number, number]> = [
     [36, 42, 2], [74, 26, 1.8], [118, 58, 1.5], [162, 34, 2], [206, 18, 1.8], [246, 52, 1.5],
     [284, 28, 2], [322, 46, 1.8], [356, 20, 1.5], [45, 92, 1.4], [90, 105, 1.6], [144, 84, 1.4],
@@ -260,7 +252,9 @@ function svgStars (): string {
   return pts.map(([x, y, r]) =>
     `<circle cx="${x}" cy="${y}" r="${r}" fill="white" opacity="0.88"/>`
   ).join('')
-}
+})()
+
+function svgStars (): string { return SVG_STARS }
 
 function svgClouds (alpha: number): string {
   return `
@@ -290,7 +284,7 @@ function svgOvercast (cloudColor: string): string {
 </g>`
 }
 
-function svgSnowDots (): string {
+const SVG_SNOW_DOTS: string = (() => {
   const dots: Array<[number, number, number]> = [
     [30, 50, 3.5], [88, 38, 2.8], [140, 72, 4], [195, 28, 3], [248, 60, 2.5], [298, 45, 3.8],
     [348, 30, 3], [380, 65, 2.5], [15, 118, 2.8], [70, 135, 3.5], [125, 108, 2], [178, 148, 3],
@@ -304,22 +298,26 @@ function svgSnowDots (): string {
   return dots.map(([x, y, r]) =>
     `<circle cx="${x}" cy="${y}" r="${r}" fill="white" opacity="0.80"/>`
   ).join('')
-}
+})()
 
-function svgThunder (): string {
+const SVG_THUNDER: string = (() => {
   const bolts = [
     { ox: 72, oy: 88, pts: [[0, 0], [8, 42], [-4, 42], [10, 88], [-5, 88], [6, 138], [-8, 138], [4, 175]] },
     { ox: 218, oy: 68, pts: [[0, 0], [10, 50], [-6, 50], [12, 108], [-6, 108], [8, 165], [-10, 165], [5, 200]] },
     { ox: 340, oy: 96, pts: [[0, 0], [7, 38], [-4, 38], [9, 78], [-5, 78], [6, 120], [-6, 120], [4, 152]] }
   ]
   return bolts.map(({ ox, oy, pts }) => {
-    const d = 'M' + (pts as Array<[number, number]>).map(([dx, dy]) => `${ox + dx},${oy + dy}`).join(' L')
+    const d = 'M' + (pts as Array<[number, number]>).map(([dx, dy]) => `${(ox) + (dx)},${(oy) + (dy)}`).join(' L')
     return [
       `<path d="${d}" fill="none" stroke="rgba(255,240,130,0.22)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`,
       `<path d="${d}" fill="none" stroke="rgba(255,255,200,0.72)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`
     ].join('')
   }).join('')
-}
+})()
+
+function svgSnowDots (): string { return SVG_SNOW_DOTS }
+
+function svgThunder (): string { return SVG_THUNDER }
 
 function svgHorizonGlow (color: string, cx: number, cy: number): string {
   return `
