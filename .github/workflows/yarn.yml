@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    # Skip version-bump commits from the auto-release workflow
+    if: "!contains(github.event.head_commit.message, 'chore: bump version')"
+    name: build, lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+      - name: Build
+        run: |
+          npm ci --legacy-peer-deps
+          npm run build
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck

@@ -28,7 +28,7 @@ import styles from './styles'
 import { actionHandler } from './action-handler-directive'
 import { localize } from './localize/localize'
 import { type HassEntity, type HassEntityBase } from 'home-assistant-js-websocket'
-import { extractMostOccuring, max, min, roundIfNotNull, roundUp } from './utils'
+import { extractMostOccuring, roundIfNotNull, roundUp } from './utils'
 import { animatedIcons, staticIcons } from './images'
 import { version } from '../package.json'
 import { safeRender } from './helpers'
@@ -115,6 +115,40 @@ const CLOUD_SPEED: Record<string, number> = {
 }
 const RAIN_SPEED: Record<string, number> = { rainy: 0.85, pouring: 1.55, stormy: 2.30 }
 
+// Config migration defaults — kept at module level to avoid per-call object creation
+const MIGRATION_DEFAULTS: Record<string, unknown> = {
+  hero_display: 'time',
+  time_format: '12',
+  time_pattern: 'h:mm',
+  day_name_format: 'short',
+  weather_icon_type: 'line',
+  animated_icon: true,
+  icon_size: 48,
+  sub_font_size: 1.3,
+  day_forecast_columns: 5,
+  hourly_forecast_columns: 4,
+  daily_forecast_size: 100,
+  hourly_forecast_size: 100,
+  card_padding: 4,
+  hourly_padding: 6,
+  hourly_time_font_size: 0.65,
+  hourly_forecast: false,
+  hide_today_section: false,
+  hide_forecast_section: false,
+  hide_daily_section: false,
+  hide_clock: false,
+  hide_date: true,
+  hide_condition: false,
+  show_humidity: false,
+  show_daily_temp: true,
+  show_hourly_temp: false,
+  show_decimal: false,
+  use_browser_time: false,
+  show_clouds: true,
+  show_humidity_daily: false,
+  show_humidity_hourly: false
+}
+
 @customElement('hass-weather-card')
 export class HassWeatherCard extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant
@@ -132,6 +166,14 @@ export class HassWeatherCard extends LitElement {
   private _lottieWind?: DotLottie
   private _lottieCloud2?: DotLottie
   private _lottieRain2?: DotLottie
+  // Cached canvas references — queried once in initLottie, reused in updateLottie
+  private _canvasClouds?: HTMLCanvasElement
+  private _canvasClouds2?: HTMLCanvasElement
+  private _canvasRain?: HTMLCanvasElement
+  private _canvasRain2?: HTMLCanvasElement
+  private _canvasWind?: HTMLCanvasElement
+  // Last applied theme key — avoids redundant applyTheme() work on every hass tick
+  private _lastThemeKey?: string
   private currentDateInterval?: ReturnType<typeof setInterval>
 
   constructor () {
@@ -165,38 +207,6 @@ export class HassWeatherCard extends LitElement {
     // that means the user explicitly changed it in the editor. If the nested value
     // equals the default it was just stored as a placeholder and the intentional
     // value lives at the root (e.g. root `hourly_forecast: true` vs nested `false`).
-    const MIGRATION_DEFAULTS: Record<string, unknown> = {
-      hero_display: 'time',
-      time_format: '12',
-      time_pattern: 'h:mm',
-      day_name_format: 'short',
-      weather_icon_type: 'line',
-      animated_icon: true,
-      icon_size: 48,
-      sub_font_size: 1.3,
-      day_forecast_columns: 5,
-      hourly_forecast_columns: 4,
-      daily_forecast_size: 100,
-      hourly_forecast_size: 100,
-      card_padding: 4,
-      hourly_padding: 6,
-      hourly_time_font_size: 0.65,
-      hourly_forecast: false,
-      hide_today_section: false,
-      hide_forecast_section: false,
-      hide_daily_section: false,
-      hide_clock: false,
-      hide_date: true,
-      hide_condition: false,
-      show_humidity: false,
-      show_daily_temp: true,
-      show_hourly_temp: false,
-      show_decimal: false,
-      use_browser_time: false,
-      show_clouds: true,
-      show_humidity_daily: false,
-      show_humidity_hourly: false
-    }
     const groupKeys = ['_header', '_hourly', '_daily', '_overall']
     const flat: Record<string, unknown> = { ...(config as unknown as Record<string, unknown>) }
     for (const key of groupKeys) {
@@ -249,6 +259,11 @@ export class HassWeatherCard extends LitElement {
       if (oldWeather !== newWeather) {
         return true
       }
+      // Re-render when configured sensor entities change
+      const sensors = [this.config.temperature_sensor, this.config.humidity_sensor, this.config.apparent_sensor, this.config.aqi_sensor]
+      for (const sensor of sensors) {
+        if (sensor && oldHass.states[sensor] !== this.hass.states[sensor]) return true
+      }
       return false
     }
     return hasConfigOrEntityChanged(this, changedProps, false)
@@ -281,6 +296,13 @@ export class HassWeatherCard extends LitElement {
     const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
     if (!canvasClouds || !canvasRain || !haCard) return
 
+    // Cache canvas references so updateLottie() never re-queries the shadow DOM
+    this._canvasClouds = canvasClouds
+    this._canvasClouds2 = canvasClouds2 ?? undefined
+    this._canvasRain = canvasRain
+    this._canvasRain2 = canvasRain2 ?? undefined
+    this._canvasWind = canvasWind ?? undefined
+
     // Set canvas drawing buffer to full card dimensions
     const w = haCard.clientWidth || 460
     const h = haCard.clientHeight || 560
@@ -293,7 +315,7 @@ export class HassWeatherCard extends LitElement {
       src: CLOUDS_LOTTIE,
       loop: true,
       autoplay: true,
-      renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+      renderConfig: { devicePixelRatio: 1, freezeOnOffscreen: true }
     })
     this._lottieCloud.addEventListener('complete', () => { this._lottieCloud?.play() })
 
@@ -302,7 +324,7 @@ export class HassWeatherCard extends LitElement {
       src: RAIN_LOTTIE,
       loop: true,
       autoplay: true,
-      renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+      renderConfig: { devicePixelRatio: 1, freezeOnOffscreen: true }
     })
     this._lottieRain.addEventListener('complete', () => { this._lottieRain?.play() })
 
@@ -313,7 +335,7 @@ export class HassWeatherCard extends LitElement {
         src: CLOUDS_LOTTIE,
         loop: true,
         autoplay: true,
-        renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+        renderConfig: { devicePixelRatio: 1, freezeOnOffscreen: true }
       })
     }
 
@@ -324,7 +346,7 @@ export class HassWeatherCard extends LitElement {
         src: RAIN_LOTTIE,
         loop: true,
         autoplay: true,
-        renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+        renderConfig: { devicePixelRatio: 1, freezeOnOffscreen: true }
       })
     }
 
@@ -336,17 +358,17 @@ export class HassWeatherCard extends LitElement {
         src: WIND_LOTTIE,
         loop: true,
         autoplay: true,
-        renderConfig: { devicePixelRatio: window.devicePixelRatio || 2, freezeOnOffscreen: false }
+        renderConfig: { devicePixelRatio: 1, freezeOnOffscreen: true }
       })
     }
   }
 
   private updateLottie (group: string): void {
-    const canvasClouds = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds')
-    const canvasClouds2 = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasClouds2')
-    const canvasRain = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain')
-    const canvasRain2 = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasRain2')
-    const canvasWind = this.shadowRoot?.querySelector<HTMLCanvasElement>('#lottieCanvasWind')
+    const canvasClouds = this._canvasClouds
+    const canvasClouds2 = this._canvasClouds2
+    const canvasRain = this._canvasRain
+    const canvasRain2 = this._canvasRain2
+    const canvasWind = this._canvasWind
     if (!canvasClouds || !canvasRain) return
 
     const showClouds = LOTTIE_CLOUDS_GROUPS.has(group) && this.config.show_clouds
@@ -358,6 +380,11 @@ export class HassWeatherCard extends LitElement {
     canvasRain.classList.toggle('is-visible', showRain)
     canvasRain2?.classList.toggle('is-visible', showRain)
     canvasWind?.classList.toggle('is-visible', showWind)
+
+    // Pause animations that are not visible to save CPU
+    if (showClouds) { this._lottieCloud?.play(); this._lottieCloud2?.play() } else { this._lottieCloud?.pause(); this._lottieCloud2?.pause() }
+    if (showRain) { this._lottieRain?.play(); this._lottieRain2?.play() } else { this._lottieRain?.pause(); this._lottieRain2?.pause() }
+    if (showWind) { this._lottieWind?.play() } else { this._lottieWind?.pause() }
 
     // CSS filter tints the cloud canvases to match the sky mood
     const cloudFilter = CLOUD_FILTER[group] ?? 'none'
@@ -463,13 +490,20 @@ export class HassWeatherCard extends LitElement {
       const state = this.getWeather().state
       const period = this.getTimePeriod()
       const group = this.getConditionGroup(state)
-      haCard.setAttribute('data-theme', `${period}-${group}`)
-      this.updateLottie(group)
-      // Progressive gradient: interpolate continuously by sun elevation
       const sun = this.getSun()
       const attrs = (sun?.attributes ?? {}) as Record<string, unknown>
       const elev = typeof attrs.elevation === 'number' ? attrs.elevation : undefined
       const rising = typeof attrs.rising === 'boolean' ? attrs.rising : undefined
+
+      // applyTheme() runs on every hass tick and every clock second.
+      // Only do DOM writes and Lottie updates when something actually changed.
+      const themeKey = `${period}-${group}-${elev ?? 'x'}-${rising ?? 'x'}`
+      if (themeKey === this._lastThemeKey) return
+      this._lastThemeKey = themeKey
+
+      haCard.setAttribute('data-theme', `${period}-${group}`)
+      this.updateLottie(group)
+      // Progressive gradient: interpolate continuously by sun elevation
       ;(haCard as HTMLElement).style.setProperty('--widget-gradient', computeCardGradient(group, elev, rising))
     } catch (_e) {
       // Weather entity not ready yet — leave existing theme
@@ -531,8 +565,25 @@ export class HassWeatherCard extends LitElement {
     `
   }
 
+  private readonly _onVisibilityChange = (): void => {
+    if (document.hidden) {
+      this._lottieCloud?.pause()
+      this._lottieCloud2?.pause()
+      this._lottieRain?.pause()
+      this._lottieRain2?.pause()
+      this._lottieWind?.pause()
+    } else {
+      // Only resume animations whose canvas is currently marked visible —
+      // avoids re-animating lotties that are paused due to weather condition.
+      if (this._canvasClouds?.classList.contains('is-visible')) { this._lottieCloud?.play(); this._lottieCloud2?.play() }
+      if (this._canvasRain?.classList.contains('is-visible')) { this._lottieRain?.play(); this._lottieRain2?.play() }
+      if (this._canvasWind?.classList.contains('is-visible')) { this._lottieWind?.play() }
+    }
+  }
+
   public connectedCallback (): void {
     super.connectedCallback()
+    document.addEventListener('visibilitychange', this._onVisibilityChange)
     if (!this.currentDateInterval) {
       this.currentDate = DateTime.now()
       const msToNextSecond = 1000 - this.currentDate.millisecond
@@ -548,6 +599,7 @@ export class HassWeatherCard extends LitElement {
 
   public disconnectedCallback (): void {
     super.disconnectedCallback()
+    document.removeEventListener('visibilitychange', this._onVisibilityChange)
     if (this.currentDateInterval) {
       clearInterval(this.currentDateInterval)
       this.currentDateInterval = undefined
@@ -926,24 +978,34 @@ export class HassWeatherCard extends LitElement {
   }
 
   private calculateAverageForecast (forecasts: WeatherForecast[]): MergedWeatherForecast {
-    const minTemps = forecasts.map((f) => f.templow ?? f.temperature ?? this.getCurrentTemperature() ?? 0)
-    const minTemp = min(minTemps)
-    const maxTemps = forecasts.map((f) => f.temperature ?? this.getCurrentTemperature() ?? 0)
-    const maxTemp = max(maxTemps)
-    const precipitationProbabilities = forecasts.map((f) => f.precipitation_probability ?? 0)
-    const precipitations = forecasts.map((f) => f.precipitation ?? 0)
-    const humidities = forecasts.map((f) => f.humidity).filter((h): h is number => h != null)
-    const avgHumidity = humidities.length > 0 ? Math.round(humidities.reduce((a, b) => a + b, 0) / humidities.length) : null
-    const conditions = forecasts.map((f) => f.condition)
+    const currentTemp = this.getCurrentTemperature() ?? 0
+    let minTemp = Infinity
+    let maxTemp = -Infinity
+    let maxPrecipProb = 0
+    let maxPrecip = 0
+    let humiditySum = 0
+    let humidityCount = 0
+    const conditions: string[] = []
+
+    for (const f of forecasts) {
+      const low = f.templow ?? f.temperature ?? currentTemp
+      const high = f.temperature ?? currentTemp
+      if (low < minTemp) minTemp = low
+      if (high > maxTemp) maxTemp = high
+      if ((f.precipitation_probability ?? 0) > maxPrecipProb) maxPrecipProb = f.precipitation_probability ?? 0
+      if ((f.precipitation ?? 0) > maxPrecip) maxPrecip = f.precipitation ?? 0
+      if (f.humidity != null) { humiditySum += f.humidity; humidityCount++ }
+      conditions.push(f.condition)
+    }
 
     return {
-      temperature: maxTemp,
-      templow: minTemp,
+      temperature: maxTemp === -Infinity ? currentTemp : maxTemp,
+      templow: minTemp === Infinity ? currentTemp : minTemp,
       datetime: this.parseDateTime(forecasts[0].datetime),
       condition: extractMostOccuring(conditions),
-      precipitation_probability: max(precipitationProbabilities),
-      precipitation: max(precipitations),
-      humidity: avgHumidity
+      precipitation_probability: maxPrecipProb,
+      precipitation: maxPrecip,
+      humidity: humidityCount > 0 ? Math.round(humiditySum / humidityCount) : null
     }
   }
 
