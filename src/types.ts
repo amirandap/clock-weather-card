@@ -1,4 +1,4 @@
-import { type LovelaceCard, type LovelaceCardConfig, type LovelaceCardEditor } from 'custom-card-helpers'
+import { type LovelaceCard, type LovelaceCardConfig, type LovelaceCardEditor, type ActionConfig } from 'custom-card-helpers'
 import { type HassEntity } from 'home-assistant-js-websocket/dist/types'
 import { type DateTime } from 'luxon'
 
@@ -71,6 +71,9 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   show_humidity_daily?: boolean
   /** Show humidity % in hourly forecast slots (default: false) */
   show_humidity_hourly?: boolean
+  tap_action?: ActionConfig
+  hold_action?: ActionConfig
+  double_tap_action?: ActionConfig
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -117,6 +120,9 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   show_clouds: boolean
   show_humidity_daily: boolean
   show_humidity_hourly: boolean
+  tap_action?: ActionConfig
+  hold_action?: ActionConfig
+  double_tap_action?: ActionConfig
 }
 
 export const enum WeatherEntityFeature {

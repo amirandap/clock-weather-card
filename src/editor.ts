@@ -160,6 +160,19 @@ const SCHEMA = [
       { name: 'locale', selector: { text: {} } },
       { name: 'time_zone', selector: { text: {} } }
     ]
+  },
+
+  // ── Interactions section ──────────────────────────────────────────────────
+  {
+    name: '_interactions',
+    type: 'expandable',
+    title: 'Interactions',
+    flatten: true,
+    schema: [
+      { name: 'tap_action', selector: { action: {} } },
+      { name: 'hold_action', selector: { action: {} } },
+      { name: 'double_tap_action', selector: { action: {} } }
+    ]
   }
 ]
 
@@ -206,7 +219,10 @@ const LABELS: Record<string, string> = {
   hide_condition: 'Hide Weather Description',
   use_browser_time: 'Use Browser Time',
   locale: 'Locale',
-  time_zone: 'Time Zone'
+  time_zone: 'Time Zone',
+  tap_action: 'Tap Action',
+  hold_action: 'Hold Action',
+  double_tap_action: 'Double Tap Action'
 }
 
 @customElement('hass-weather-card-editor')
