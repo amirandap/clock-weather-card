@@ -14,7 +14,7 @@ env:
 
 jobs:
   release:
-    name: Bump version & publish release
+    name: Build & publish release
     runs-on: ubuntu-latest
     # Skip version-bump commits pushed back by this workflow to avoid infinite loops
     if: "!contains(github.event.head_commit.message, 'chore: bump version')"
@@ -32,38 +32,34 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
+      - name: Compute next version
+        id: version
+        run: |
+          # Derive next patch version from the latest semver tag, no commit needed
+          LATEST=$(git tag --list 'v*' --sort=-version:refname | head -1)
+          if [ -z "$LATEST" ]; then
+            NEXT="1.0.0"
+          else
+            NEXT=$(echo "$LATEST" | sed 's/^v//' | awk -F. '{print $1"."$2"."$3+1}')
+          fi
+          echo "version=$NEXT" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT"
+
       - name: Build
         run: |
           npm ci --legacy-peer-deps
+          # Stamp the version into package.json for the bundle (no commit)
+          npm pkg set version="${{ steps.version.outputs.version }}"
           npm run build
-          echo "::group::Dirty files after npm ci + build"
-          git status --short
-          git diff --name-only
-          echo "::endgroup::"
 
-      - name: Bump patch version
-        id: version
-        run: |
-          npm version patch --no-git-tag-version
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Commit version bump & push tag
+      - name: Tag & push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          npm pkg set version="${{ steps.version.outputs.version }}"
-          git add package.json package-lock.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
           git tag v${{ steps.version.outputs.version }}
-          # Reset any remaining dirty tracked files (e.g. build artifacts that
-          # were tracked in the past) so git pull --rebase never fails.
-          git restore .
-          git pull --rebase origin master
-          git push origin HEAD:master
           git push origin v${{ steps.version.outputs.version }}
 
       - name: Create GitHub Release
