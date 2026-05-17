@@ -8,8 +8,7 @@ import {
   hasAction,
   type ActionHandlerEvent,
   handleAction,
-  TimeFormat,
-  type ActionConfig
+  TimeFormat
 } from 'custom-card-helpers'
 
 import {
@@ -525,8 +524,8 @@ export class HassWeatherCard extends LitElement {
       <ha-card
         @action=${(e: ActionHandlerEvent) => { this.handleAction(e) }}
         .actionHandler=${actionHandler({
-          hasHold: hasAction(this.config.hold_action as ActionConfig | undefined),
-          hasDoubleClick: hasAction(this.config.double_tap_action as ActionConfig | undefined)
+          hasHold: hasAction(this.config.hold_action),
+          hasDoubleClick: hasAction(this.config.double_tap_action)
         })}
         tabindex="0"
         .label=${`Hass Weather Card: ${this.config.entity || 'No Entity Defined'}`}

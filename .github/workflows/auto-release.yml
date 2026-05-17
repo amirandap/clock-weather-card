@@ -55,14 +55,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          # npm ci never modifies package-lock.json so the working tree
-          # is guaranteed clean after the build step. No defensive reset needed.
           npm pkg set version="${{ steps.version.outputs.version }}"
-          # Commit the bump locally first, then rebase on top of remote master.
-          # git pull --rebase requires a clean working tree; committing first satisfies that.
           git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
           git tag v${{ steps.version.outputs.version }}
+          # Reset any remaining dirty tracked files (e.g. build artifacts that
+          # were tracked in the past) so git pull --rebase never fails.
+          git restore .
           git pull --rebase origin master
           git push origin HEAD:master
           git push origin v${{ steps.version.outputs.version }}
